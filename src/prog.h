@@ -10,6 +10,15 @@
 using namespace std;
 
 //
+// General math
+//
+void mat_print_out(int n, double *mat);
+void mul_vec_mat(int n, double *vec, double *mat, double *out);
+
+void transpose(int n, double *mat);
+bool sole_gauss(int n, double *matA, double *vecx, double *vecb);
+
+//
 // Structure
 //
 // The representation of ER-CHMM structure.
@@ -57,11 +66,13 @@ class ErChmm {
     int *getRi();
     double* getLambda();
     double* getP();
+    double* obtainAlpha();
+
 
     void print_out();
     void write_to_file(const char *fileName);
     void read_from_file(const char *fileName);
-    
+
 };
 
 #endif /* PROG_HEADER */
