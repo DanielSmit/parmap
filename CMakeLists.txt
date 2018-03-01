@@ -28,7 +28,7 @@ SET ( CUDA_SOURCES
 include_directories( ${CMAKE_SOURCE_DIR}/src/extra/cuda_inc/ )
 
 
-set(CMAKE_CXX_FLAGS "-O3 -fopenmp ")
+set(CMAKE_CXX_FLAGS "-O3 -fopenmp -std=c++11")
 
 # compile java sources
 #set(CMAKE_JAVA_COMPILE_FLAGS "-source" "1.6" "-target" "1.6")

@@ -28,6 +28,42 @@ bool test_sole_gauss(){
   return true;
 }
 
+bool test_matrix_inverse(){
+  int n = 3;
+  double *matA = new double[n*n];
+  double *matInv = new double[n*n];
+
+
+  matA[0*n+0] = 1; matA[0*n+1] = 2; matA[0*n+2] = 3;
+  matA[1*n+0] = -2; matA[1*n+1] = 1; matA[1*n+2] = 2;
+  matA[2*n+0] = -1; matA[2*n+1] = 3; matA[2*n+2] = 1;
+
+
+  mat_inv(n, matA, matInv);
+
+  double *matU = new double[n*n];
+  mul_mat_mat(n, matInv, matA, matU);
+
+  double absErr = 0;
+  for(int i = 0; i < n; i++){
+    for(int j = 0; j < n; j++){
+      double target = 0;
+      if(i == j) target = 1;
+      absErr += abs(matU[i*n+j]-target);
+    }
+  }
+
+  if(absErr != 3.33066907387546962127e-16) return false;
+
+  delete [] matA;
+  delete [] matInv;
+  delete [] matU;
+
+  return true;
+
+
+}
+
 bool test_erchmm_structure_generation(){
 
   vector<Structure*>* allStructures = generate_all_structures(4);
@@ -83,7 +119,6 @@ bool test_stationary_prob_computation(){
   ri[1] = 2;
   ri[2] = 3;
 
-
   lambda[0] = 1.5;
   lambda[1] = 2.5;
   lambda[2] = 3.0;
@@ -95,7 +130,7 @@ bool test_stationary_prob_computation(){
 
   ErChmm *erChmm = new ErChmm();
   erChmm->set(bc, ri, lambda, P);
-  
+
   double *alpha = erChmm->obtainAlpha();
 
   if(alpha[0] != 0.22950819672131150817) return false;
@@ -109,7 +144,160 @@ bool test_stationary_prob_computation(){
   if(alpha2[1] != 0.55737704918032793255) return false;
   if(alpha2[2] != 0.21311475409836067030) return false;
 
+
+  delete [] ri;
+  delete [] lambda;
+  delete [] P;
+  delete erChmm;
+  delete [] alpha;
+  delete [] alpha2;
+
   return true;
+}
+
+bool test_stationary_prob_computation_for_general_map(){
+  int bc = 3;
+  int *ri = new int[bc];
+  double *lambda = new double[bc];
+  double *P = new double[bc*bc];
+  ri[0] = 1;
+  ri[1] = 2;
+  ri[2] = 3;
+
+  lambda[0] = 1.5;
+  lambda[1] = 2.5;
+  lambda[2] = 3.0;
+
+
+  P[0*bc+0] = 0.2; P[0*bc+1] = 0.3; P[0*bc+2] = 0.5;
+  P[1*bc+0] = 0.1; P[1*bc+1] = 0.8; P[1*bc+2] = 0.1;
+  P[2*bc+0] = 0.6; P[2*bc+1] = 0.2; P[2*bc+2] = 0.2;
+
+  ErChmm *erChmm = new ErChmm();
+  erChmm->set(bc, ri, lambda, P);
+
+  Map *map = new Map();
+  map->set(erChmm);
+
+  double *alpha = map->obtainAlpha();
+
+  if(alpha[0] != 0.22950819672131139715) return false;
+  if(alpha[1] != 0.55737704918032793255) return false;
+  if(alpha[2] != -0.00000000000000000000) return false;
+  if(alpha[3] != 0.21311475409836064254) return false;
+  if(alpha[4] != -0.00000000000000000000) return false;
+  if(alpha[5] != -0.00000000000000000000) return false;
+
+
+  delete [] ri;
+  delete [] lambda;
+  delete [] P;
+  delete erChmm;
+  delete [] alpha;
+  delete map;
+
+  return true;
+}
+
+bool test_interarrival_generation(){
+  int bc = 3;
+  int *ri = new int[bc];
+  double *lambda = new double[bc];
+  double *P = new double[bc*bc];
+  ri[0] = 1;
+  ri[1] = 2;
+  ri[2] = 3;
+
+  lambda[0] = 1.5;
+  lambda[1] = 2.5;
+  lambda[2] = 3.0;
+
+
+  P[0*bc+0] = 0.2; P[0*bc+1] = 0.3; P[0*bc+2] = 0.5;
+  P[1*bc+0] = 0.1; P[1*bc+1] = 0.8; P[1*bc+2] = 0.1;
+  P[2*bc+0] = 0.6; P[2*bc+1] = 0.2; P[2*bc+2] = 0.2;
+
+  ErChmm *erChmm = new ErChmm();
+  erChmm->set(bc, ri, lambda, P);
+
+  Interarrivals *interarrivals = new Interarrivals();
+  interarrivals->generate(erChmm, 100000);
+
+  Map *map = new Map();
+  map->set(erChmm);
+
+  double meanAbsDiff = abs(interarrivals->getMean() - map->obtainMean());
+  if(meanAbsDiff != 1.46993157244312833143e-04) return false;
+
+  delete [] ri;
+  delete [] lambda;
+  delete [] P;
+  delete erChmm;
+  delete interarrivals;
+
+  return true;
+}
+
+bool test_erchmm_to_general_map(){
+  int bc = 2;
+
+  int *ri = new int[bc];
+  double *lambda = new double[bc];
+  double *P = new double[bc*bc];
+  ri[0] = 2;
+  ri[1] = 1;
+
+  int n = 3;
+
+  lambda[0] = 10;
+  lambda[1] = 20;
+
+
+  P[0*bc+0] = 0.8; P[0*bc+1] = 0.2;
+  P[1*bc+0] = 0.3; P[1*bc+1] = 0.7;
+
+  ErChmm *erChmm = new ErChmm();
+  erChmm->set(bc, ri, lambda, P);
+
+  Map *map = new Map();
+  map->set(erChmm);
+
+  double absErr = 0;
+  double *D0 = map->getD0();
+  double *D1 = map->getD1();
+
+
+  absErr += abs(D0[0*n+0] - (-10.0));
+  absErr += abs(D0[0*n+1] - ( 10.0));
+  absErr += abs(D0[0*n+2] - (  0.0));
+
+  absErr += abs(D0[1*n+0] - (  0.0));
+  absErr += abs(D0[1*n+1] - (-10.0));
+  absErr += abs(D0[1*n+2] - (  0.0));
+
+  absErr += abs(D0[2*n+0] - (  0.0));
+  absErr += abs(D0[2*n+1] - (  0.0));
+  absErr += abs(D0[2*n+2] - (-20.0));
+
+
+
+  absErr += abs(D1[0*n+0] - (  0.0));
+  absErr += abs(D1[0*n+1] - (  0.0));
+  absErr += abs(D1[0*n+2] - (  0.0));
+
+  absErr += abs(D1[1*n+0] - (  8.0));
+  absErr += abs(D1[1*n+1] - (  0.0));
+  absErr += abs(D1[1*n+2] - (  2.0));
+
+  absErr += abs(D1[2*n+0] - (  6.0));
+  absErr += abs(D1[2*n+1] - (  0.0));
+  absErr += abs(D1[2*n+2] - ( 14.0));
+
+  if(absErr != 0.0) return false;
+
+
+  return true;
+
 }
 
 /* We will test each CUDA implementation with a small example.
@@ -256,8 +444,14 @@ void run_all_tests(){
   printf("\n");
 
   printf("test_sole_gauss ... %s\n", (test_sole_gauss()?"PASSED":"FAILED"));
+  printf("test_matrix_inverse ... %s\n", (test_matrix_inverse()?"PASSED":"FAILED"));
+
   printf("test_erchmm_structure_generation ... %s\n", (test_erchmm_structure_generation()?"PASSED":"FAILED"));
   printf("test_stationary_prob_computation ... %s\n", (test_stationary_prob_computation()?"PASSED":"FAILED"));
+  printf("test_stationary_prob_computation_for_general_map ... %s\n", (test_stationary_prob_computation_for_general_map()?"PASSED":"FAILED"));
+
+  printf("test_interarrival_generation ... %s\n", (test_interarrival_generation()?"PASSED":"FAILED"));
+  printf("test_erchmm_to_general_map ... %s\n", (test_erchmm_to_general_map()?"PASSED":"FAILED"));
 
   printf("test_em P_1 ... %s\n", (test_em(P_1)?"PASSED":"FAILED"));
   printf("test_em P_2 ... %s\n", (test_em(P_2)?"PASSED":"FAILED"));

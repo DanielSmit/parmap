@@ -32,6 +32,48 @@ void mul_vec_mat(int n, double *vec, double *mat, double *out){
   }
 }
 
+void mul_mat_mat(int n, double *matA, double *matB, double *matC){
+  double sum;
+
+  for (int row = 0; row < n; row++) {
+    for (int col = 0; col < n; col++) {
+      sum = 0;
+      for (int k = 0; k < n; k++)
+        sum += matA[row*n+k] * matB[k*n+col];
+      matC[row*n+col] = sum;
+    }
+  }
+}
+
+void mat_unit(int n, double *mat){
+  for (int row = 0; row < n; row++)
+    for (int col = 0; col < n; col++)
+      mat[row*n+col] = 0;
+
+  for (int i = 0; i < n; i++)
+    mat[i*n+i] = 1;
+}
+
+void mat_inv(int n, double *matA, double *matInv){
+  double *matB = new double[n*n];
+  mat_unit(n, matB);
+  sole_gauss_mat(n, matA, matInv, matB);
+  delete [] matB;
+}
+
+void mat_scale(int n, double *mat, double scale){
+  for(int i = 0; i < n*n; i++)
+    mat[i] *= scale;
+}
+
+double vec_sum_up(int n, double *vec){
+  double sum = 0;
+  for(int i = 0; i < n; i++)
+    sum += vec[i];
+
+  return sum;
+}
+
 bool sole_gauss(int n, double *matA, double *vecx, double *vecb){
 
   double *A = new double[n*n];
@@ -109,6 +151,135 @@ bool sole_gauss(int n, double *matA, double *vecx, double *vecb){
 
   return true;
 
+}
+
+bool sole_gauss_mat(int n, double *matA, double *matX, double *matB){
+  double *A = new double[n*n];
+  double *X = new double[n*n];
+  double *B = new double[n*n];
+
+
+
+
+  int i = 0;
+  int k = 0;
+  int l = 0;
+  int j = 0;
+  int col = 0;
+
+  double z = 0;
+  double rawNormA = 0;
+  double rawNormB = 0;
+  double s = 0;
+
+  for(i = 0; i < n*n; i++){
+    A[i] = matA[i];
+    B[i] = matB[i];
+  }
+
+  for (k = 0; k < n - 1; k++) {
+    l = k;
+
+    for (i = k; i < n; i++) {
+      rawNormA = abs(A[l*n+k]);
+      rawNormB = abs(A[i*n+k]);
+      if (rawNormA < rawNormB)
+        l = i;
+    }
+
+    if (abs(A[l*n+k]) == 0)
+      return false;
+
+    if (k != l) {
+      for (j = k; j < n; j++) {
+        z = A[k*n+j];
+        A[k*n+j] = A[l*n+j];
+        A[l*n+j] = z;
+      }
+
+      for (j = 0; j < n; j++) {
+        z = B[k*n+j];
+        B[k*n+j] = B[l*n+j];
+        B[l*n+j] = z;
+      }
+    }
+
+    for (i = k + 1; i < n; i++) {
+      s = A[i*n+k] / A[k*n+k];
+
+      for (j = k + 1; j < n; j++)
+        A[i*n+j] -= s * A[k*n+j];
+
+      for (j = 0; j < n; j++)
+        B[i*n+j] -= s * B[k*n+j];
+    }
+  }
+
+  if (abs(A[(n-1)*n+(n-1)]) == 0)
+    return false;
+
+  for (col = 0; col < n; col++) {
+    X[(n - 1)*n+col] = B[(n - 1)*n+col] / A[(n - 1)*n+(n - 1)];
+
+    for (i = n - 2; i >= 0; i--) {
+      s = 0;
+      for (j = i + 1; j < n; j++)
+        s += A[i*n+j] * X[j*n+col];
+
+      X[i*n+col] = (B[i*n+col] - s) / A[i*n+i];
+    }
+  }
+
+
+  for(int i = 0; i < n*n; i++) matX[i] = X[i];
+
+  delete [] A;
+  delete [] X;
+  delete [] B;
+}
+
+
+int prob_selection(int n, double *probArr, double prob){
+
+  double probSum = 0;
+  for (int i = 0; i < n; i++)
+    probSum += probArr[i];
+  if (prob >= probSum)
+    return -1;
+
+  if (prob == 0.0)
+    return 0;
+
+  double csum = 0;
+  int index = 0;
+  while (csum < prob) {
+    if (index >= n)
+      csum = 1.0;
+    else
+      csum += probArr[index];
+    index++;
+  }
+  index--;
+
+  while (index < n && probArr[index] == 0.0)
+    index++;
+
+  if (index == n)
+    return -1;
+
+  return index;
+}
+
+double exp_dist_cdf_inv(double lambda, double arg){
+  return log(1-arg) / (-lambda);
+}
+
+double erlang_rnd(int r, double lambda, Random *rnd){
+  double sum = 0;
+  for(int i = 0; i < r; i++)
+    sum += exp_dist_cdf_inv(lambda, rnd->next());
+
+  return sum;
 }
 
 //
@@ -203,6 +374,135 @@ vector<Structure*>* generate_all_structures(int n){
 
   return allStructures;
 
+}
+
+//
+// Map
+//
+void Map::set(ErChmm *erChmm){
+  int bc = erChmm->getBc();
+  int *ri = erChmm->getRi();
+  double *lambda = erChmm->getLambda();
+  double *P = erChmm->getP();
+
+
+
+
+  int size = ri[0];
+  int *s = new int[bc];
+  s[0] = 0;
+  for(int i = 1; i < bc; i++){
+    s[i] = s[i-1] + ri[i-1];
+    size += ri[i];
+  }
+
+  double *D0 = new double[size*size];
+  double *D1 = new double[size*size];
+
+  for(int i = 0; i < size*size; i++){
+    D0[i] = 0;
+    D1[i] = 0;
+  }
+  int idx;
+  for(int i = 0; i < bc; i++){
+    for(int j = 0; j < ri[i]-1; j++){
+      idx = s[i]+j;
+      D0[idx*size + idx] = -lambda[i];
+      D0[idx*size + idx+1] = lambda[i];
+    }
+    idx = s[i] + ri[i] - 1;
+    D0[idx*size + idx] = -lambda[i];
+  }
+
+  for(int i = 0; i < bc; i++)
+    for(int j = 0; j < bc; j++)
+      D1[(s[i]+ri[i]-1)*size+s[j]] = P[i*bc+j]*lambda[i];
+
+  mSize = size;
+  mD0 = D0;
+  mD1 = D1;
+}
+
+int Map::getSize(){
+  return mSize;
+}
+
+double* Map::getD0(){
+  return mD0;
+}
+
+double* Map::getD1(){
+  return mD1;
+}
+
+double* Map::obtainAlpha(){
+  double *mat = new double[mSize*mSize];
+  double *mat2 = new double[mSize*mSize];
+
+  double *inv = new double[mSize*mSize];
+  for(int i = 0; i < mSize*mSize; i++)
+    mat[i] = -mD0[i];
+
+  mat_inv(mSize, mat, inv);
+
+  mul_mat_mat(mSize, inv, mD1, mat2);
+
+  transpose(mSize, mat2);
+
+  for(int i = 0; i < mSize; i++)
+    mat2[i*mSize+i] -= 1.0;
+
+
+  for(int i = 0; i < mSize; i++)
+    mat2[0*mSize+i] = 1;
+
+  double *b = new double[mSize];
+  b[0] = 1.;
+  for(int i = 1; i < mSize; i++) b[i] = 0.;
+
+  double *alpha = new double[mSize];
+
+  sole_gauss(mSize, mat2, alpha, b);
+
+  delete [] b;
+  delete [] mat;
+  delete [] mat2;
+  delete [] inv;
+
+  return alpha;
+}
+
+double Map::obtainMean(){
+  double *mat = new double[mSize*mSize];
+  double *inv = new double[mSize*mSize];
+
+  for(int i = 0; i < mSize*mSize; i++)
+    mat[i] = -mD0[i];
+
+  mat_inv(mSize, mat, inv);
+
+  double *alpha = obtainAlpha();
+  double *vec = new double[mSize];
+
+  mul_vec_mat(mSize, alpha, inv, vec);
+
+  double mean = vec_sum_up(mSize, vec);
+
+  delete [] mat;
+  delete [] inv;
+  delete [] alpha;
+  delete [] vec;
+
+  return mean;
+}
+
+void Map::print_out(){
+  printf("Map, size=%d\n", mSize);
+  printf("D0 : \n");
+  mat_print_out(mSize, mD0);
+  printf("D1 : \n");
+  mat_print_out(mSize, mD1);
+  printf("\n");
 }
 
 //
@@ -370,12 +670,85 @@ void ErChmm::read_from_file(const char *fileName){
   delete [] P;
 }
 
+//
+// Random
+//
+Random::Random(){
+  mGen = new std::mt19937();
+  mDist = new std::uniform_real_distribution<double>(0., 1.);
+}
+
+double Random::next(){
+  return (*mDist)(*mGen);
+}
+
+//
+// Interarrivals
+//
+void Interarrivals::generate(ErChmm *erChmm, int count){
+  int bc = erChmm->getBc();
+  int *ri = erChmm->getRi();
+  double *lambda = erChmm->getLambda();
+  double *P = erChmm->getP();
+
+  double *alpha = erChmm->obtainAlpha();
+  Random *rnd = new Random();
+
+  int cb; // current branch
+  cb = prob_selection(bc, alpha, rnd->next());
+
+  float *arr = new float[count];
+
+  double sum = 0;
+  for(int k = 0; k < count; k++){
+    float interarrival = (float)erlang_rnd(ri[cb], lambda[cb], rnd);
+    arr[k] = interarrival;
+    sum += (double) interarrival;
+
+    cb = prob_selection(bc, (double*)&P[cb*bc], rnd->next());
+  }
+
+  mCount = count;
+  mMean = sum / (double)count;
+  mArr = arr;
+
+  delete rnd;
+  delete [] alpha;
+}
+
+int Interarrivals::getCount(){
+  return mCount;
+}
+
+double Interarrivals::getMean(){
+  return mMean;
+}
+
+float* Interarrivals::getArr(){
+  return mArr;
+}
+
+void Interarrivals::print_out(){
+  printf("Interarrivals: count=%d, mean=%f\n", mCount, mMean);
+  for(int i = 0; i < mCount; i++)
+    printf("  [%d] : %f\n", i, mArr[i]);
+}
+
+void Interarrivals::write_to_file(const char *fileName){
+
+}
+
+void Interarrivals::read_from_file(const char *fileName){
+
+}
+
 int main(int argc, char *argv[]){
 
   printf("Parallel algorithms for fitting Markov Arrial process fitting, 2017-2018\n");
   printf("\n");
 
   run_all_tests();
+
 
   // int bc = 2;
   // int *ri = new int[bc];
