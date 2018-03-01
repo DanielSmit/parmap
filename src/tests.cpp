@@ -1,13 +1,11 @@
-
-#include <stdio.h>
-#include "mapem.h"
+#include "tests.h"
 
 /* We will test each CUDA implementation with a small example.
 *  The results will be compared with ones obtained by a serial implementation.
 *
 * impl - the CUDA implementation to test, valid values : P_1, P_2, P_2_D, P_3, P_3_D.
 */
-bool test(int impl){
+bool test_em(int impl){
 
   /* Number of branches. */
   int bc = 3;
@@ -141,20 +139,61 @@ bool test(int impl){
 
 }
 
-int main(int argc, char *argv[]){
+bool test_erchmm_structure_generation(){
 
-  printf("Parallel algorithms for fitting Markov Arrial process fitting, 2017\n");
+  vector<Structure*>* allStructures = generate_all_structures(4);
+
+  //for(int i = 0; i < allStructures->size(); i++)
+  //  (*allStructures)[i]->print_out();
+
+  // structure : 4
+  // structure : 3, 1
+  // structure : 2, 2
+  // structure : 2, 1, 1
+  // structure : 1, 1, 1, 1
+
+  if(allStructures->size() != 5) return false;
+
+  Structure *st = (*allStructures)[0];
+  if(st->getBc() != 1) return false;
+  if(st->getRi()[0] != 4) return false;
+
+  st = (*allStructures)[1];
+  if(st->getBc() != 2) return false;
+  if(st->getRi()[0] != 3) return false;
+  if(st->getRi()[1] != 1) return false;
+
+  st = (*allStructures)[2];
+  if(st->getBc() != 2) return false;
+  if(st->getRi()[0] != 2) return false;
+  if(st->getRi()[1] != 2) return false;
+
+  st = (*allStructures)[3];
+  if(st->getBc() != 3) return false;
+  if(st->getRi()[0] != 2) return false;
+  if(st->getRi()[1] != 1) return false;
+  if(st->getRi()[2] != 1) return false;
+
+  st = (*allStructures)[4];
+  if(st->getBc() != 4) return false;
+  if(st->getRi()[0] != 1) return false;
+  if(st->getRi()[1] != 1) return false;
+  if(st->getRi()[2] != 1) return false;
+  if(st->getRi()[3] != 1) return false;
+
+  return true;
+}
+
+void run_all_tests(){
   printf("\n");
 
-
-  printf("P_1   ...  %s\n", (test(P_1)?"passed":"failed"));
-  printf("P_2   ...  %s\n", (test(P_2)?"passed":"failed"));
-  printf("P_2_D ...  %s\n", (test(P_2_D)?"passed":"failed"));
-  printf("P_3   ...  %s\n", (test(P_3)?"passed":"failed"));
-  printf("P_3_D ...  %s\n", (test(P_3_D)?"passed":"failed"));
+  printf("test_erchmm_structure_generation ... %s\n", (test_erchmm_structure_generation()?"PASSED":"FAILED"));
+  printf("test_em P_1 ... %s\n", (test_em(P_1)?"PASSED":"FAILED"));
+  printf("test_em P_2 ... %s\n", (test_em(P_2)?"PASSED":"FAILED"));
+  printf("test_em P_2_D ... %s\n", (test_em(P_2_D)?"PASSED":"FAILED"));
+  printf("test_em P_3 ... %s\n", (test_em(P_3)?"PASSED":"FAILED"));
+  printf("test_em P_3_D ... %s\n", (test_em(P_3_D)?"PASSED":"FAILED"));
 
 
   printf("\n");
-
-  return 0;
 }
