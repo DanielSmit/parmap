@@ -11,7 +11,7 @@ bool test(int impl){
 
   /* Number of branches. */
   int bc = 3;
-  
+
   /* ER-CHMM structure */
   int *ri = new int[bc];
   ri[0] = 1; ri[1] = 2; ri[2] = 3;
@@ -66,14 +66,14 @@ bool test(int impl){
       lambdaArr,
       pArr,
       T,
-      timeArr, 
+      timeArr,
       minIterCount,
       maxIterCount,
       eps,
       sumVarCount,
       maxPhi
     );
- 
+
     em->calc();
 
   /* ER-CHMM fitting using CUDA */
@@ -91,19 +91,19 @@ bool test(int impl){
       timeArr,
       h,
       partitionSize,
-      eps, 
+      eps,
       minIterCount,
       maxIterCount
     );
 
   emCuda->calc();
 
- 
+
 
   /* For results comparison, we find the max  absolute error. */
 
 
-  float maxAbsError = 0; 
+  float maxAbsError = 0;
   float absError;
 
   for(int i = 0; i < bc; i++){
@@ -142,11 +142,11 @@ bool test(int impl){
 }
 
 int main(int argc, char *argv[]){
- 
+
   printf("Parallel algorithms for fitting Markov Arrial process fitting, 2017\n");
   printf("\n");
 
-  
+
   printf("P_1   ...  %s\n", (test(P_1)?"passed":"failed"));
   printf("P_2   ...  %s\n", (test(P_2)?"passed":"failed"));
   printf("P_2_D ...  %s\n", (test(P_2_D)?"passed":"failed"));

@@ -18,10 +18,10 @@ __constant__ float cm_pArr[100];
 
 __device__
 int ii(int ofs, int bc, int row, int col, int bth, int bthc) {
-  return ofs + (row*bc + col)*bthc + bth; 
+  return ofs + (row*bc + col)*bthc + bth;
 }
 
-__device__ 
+__device__
 int mi(int ofs, int bc, int i, int row, int col, int bth, int bthc) {
   return ofs + (i*bc*bc + row*bc + col)*bthc+bth;
 }
@@ -48,9 +48,9 @@ int factorial(int a) {
   return a * factorial(a - 1);
 }
 
-__device__ 
+__device__
 float f(int r, float lambda, float x) {
-  float factor = (float) powf(lambda * x, r - 1) * cm_facinv[r-1]; 
+  float factor = (float) powf(lambda * x, r - 1) * cm_facinv[r-1];
   float value = factor * lambda * (float) expf(-lambda * x);
   return value;
 }
@@ -59,7 +59,7 @@ float f(int r, float lambda, float x) {
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_mat_o2_o3<bc, bc2>, h,\
                                                  0);
-  
+
 #define KERNEL_MAT_O2_O3(bc, bc2, grid_dim, block_dim) cups::kernel_mat_o2_o3<bc, bc2><<<grid_dim, block_dim, 0>>>(\
     T,\
     L,\
@@ -77,7 +77,7 @@ __global__ void
 kernel_mat_o2_o3(
     int T,
     int L,
-    int K, 
+    int K,
     float *o2mat, int *o2matex,
     float *o3mat, int *o3matex,
     float *umat, float *umat2, int *umatex,
@@ -131,11 +131,11 @@ kernel_mat_o2_o3(
 			}
 		}
 
-		int mex = 0; 
-		 
+		int mex = 0;
+
 		int exA = prev_uex + mex;
 		int exB = uex + mex;
-		
+
 		int exA_diff = exA - uex;
 		int exB_diff = exB - uex;
 
@@ -192,7 +192,7 @@ kernel_mat_o2_o3(
 		// update u
 		max = 0.0f;
 		for (int r = 0; r < bc; r++) {
-			#pragma unroll 
+			#pragma unroll
 			for (int c = 0; c < bc; c++)
 				rvec[c] = umat[ii(uofs, bc, r, c, bth, bthc)];
 
@@ -208,7 +208,7 @@ kernel_mat_o2_o3(
 		}
 		int ex = LOG2(max);
 		float exf = POW2(-ex);
-		for (int r = 0; r < bc; r++) 
+		for (int r = 0; r < bc; r++)
 			for (int c = 0; c < bc; c++)
 				 umat[ii(uofs, bc, r, c, bth, bthc)] *= exf;
 
@@ -216,7 +216,7 @@ kernel_mat_o2_o3(
 		uex = uex + mex + ex;
 	}
 
-	for (int r = 0; r < bc; r++) 
+	for (int r = 0; r < bc; r++)
 		for (int c = 0; c < bc; c++)
 	    umat2[l*bc*bc + r*bc + c] = umat[ii(uofs, bc, r, c, bth, bthc)];
 
@@ -231,7 +231,7 @@ kernel_mat_o2_o3(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_vec_o2_o3<bc, bc2>, h,\
                                                  0);
- 
+
 #define KERNEL_VEC_O2_O3(bc, bc2, grid_dim, block_dim) cups::kernel_vec_o2_o3<bc, bc2><<<grid_dim, block_dim, 0>>>(\
     T,\
     K,\
@@ -247,7 +247,7 @@ kernel_mat_o2_o3(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_vec_o2_o3_f<bc, bc2>, h,\
                                                  0);
- 
+
 #define KERNEL_VEC_O2_O3_F(bc, bc2, grid_dim, block_dim) cups::kernel_vec_o2_o3_f<bc, bc2><<<grid_dim, block_dim, 0>>>(\
     T,\
     K,\
@@ -283,7 +283,7 @@ kernel_vec_o2_o3(
 	int v3ofs = bthc * blockIdx.x * bc * bc * bc;
 	int v2ofs = bthc * blockIdx.x * bc * bc;
 	int tofs = bthc * blockIdx.x * K;
-	 
+
 	float rvec[bc];
 	float ruvec[bc];
 	float rmmat[bc2];
@@ -311,18 +311,18 @@ kernel_vec_o2_o3(
 //        float fval =  (storef ? fvec[fofs + (zz*bc+r)*bthc + bth] : f(cm_ri[r], cm_lambdaArr[r], x));
 			float fval =  f(cm_ri[r], cm_lambdaArr[r], x);
 
-			#pragma unroll 
+			#pragma unroll
 			for (int c = 0; c < bc; c++){
 				val = cm_pArr[r * bc + c] * fval;
 				/*mmat[ii(uofs, bc, r, c, bth, bthc)]*/ rmmat[r*bc+c] = val;
 //          max = MAXX(max, val);
 		 }
 		}
-		mex = 0; 
+		mex = 0;
 
 		int exA = prev_uex + mex;
 		int exB = uex + mex;
-		
+
 		int exA_diff = exA - uex;
 		int exB_diff = exB - uex;
 
@@ -354,7 +354,7 @@ kernel_vec_o2_o3(
 			for (int j = 0; j < bc; j++) {
 
 				// o3 = o3 * M
-				#pragma unroll 
+				#pragma unroll
 				for (int c = 0; c < bc; c++)
 					rvec[c] = o3vec[vij(v3ofs, bc, i, j, c, bth, bthc)];
 
@@ -396,7 +396,7 @@ kernel_vec_o2_o3(
 	}
 	o2vecex[l] = prev_uex;
 	o3vecex[l] = prev_uex;
-	
+
 }
 
 template<int bc, int bc2>
@@ -424,7 +424,7 @@ kernel_vec_o2_o3_f(
 	int v2ofs = bthc * blockIdx.x * bc * bc;
 	int fofs = bthc * blockIdx.x * K * bc;
 	int tofs = bthc * blockIdx.x * K;
-	 
+
 	float rvec[bc];
 	float ruvec[bc];
 	float rmmat[bc2];
@@ -450,17 +450,17 @@ kernel_vec_o2_o3_f(
 		#pragma unroll
 		for (int r = 0; r < bc; r++) {
 			float fval =  fvec[fofs + (zz*bc+r)*bthc + bth];
-			#pragma unroll 
+			#pragma unroll
 			for (int c = 0; c < bc; c++){
 				val = cm_pArr[r * bc + c] * fval;
 				rmmat[r*bc+c] = val;
 		 }
 		}
-		mex = 0; 
+		mex = 0;
 
 		int exA = prev_uex + mex;
 		int exB = uex + mex;
-		
+
 		int exA_diff = exA - uex;
 		int exB_diff = exB - uex;
 
@@ -492,7 +492,7 @@ kernel_vec_o2_o3_f(
 			for (int j = 0; j < bc; j++) {
 
 				// o3 = o3 * M
-				#pragma unroll 
+				#pragma unroll
 				for (int c = 0; c < bc; c++)
 					rvec[c] = o3vec[vij(v3ofs, bc, i, j, c, bth, bthc)];
 
@@ -534,14 +534,14 @@ kernel_vec_o2_o3_f(
 	}
 	o2vecex[l] = prev_uex;
 	o3vecex[l] = prev_uex;
-	
+
 }
 
 #define MAX_ACTIVE_BLOCKS__STORE_F(bc, bc2) \
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_store_f<bc, bc2>, h,\
                                                  0);
- 
+
 #define KERNEL_STORE_F(bc, bc2, grid_dim, block_dim) cups::kernel_store_f<bc,bc2><<<grid_dim, block_dim>>>(\
     T,\
     L,\
@@ -582,11 +582,11 @@ kernel_store_f(
 
 	for (int z = zi, zz = 0; z < ze; z++, zz++) {
 		float x = timeArr[tofs + zz*bthc + bth];
-		
+
 		int idx = fofs + zz*bc*bthc + bth;
 		#pragma unroll
 		for(int r = 0; r < bc; r++){
-			float lambda = cm_lambdaArr[r]; 
+			float lambda = cm_lambdaArr[r];
 			int ri = cm_ri[r]-1;
 			fvec[idx] = (powf(lambda * x, ri) * cm_facinv[ri]) * lambda * expf(-lambda * x);
 			idx += bthc;
@@ -598,7 +598,7 @@ kernel_store_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_umat<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_UMAT(bc, bc2, grid_dim, block_dim) cups::kernel_umat<bc,bc2><<<grid_dim, block_dim>>>(\
     T,\
@@ -615,7 +615,7 @@ kernel_store_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_umat_f<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_UMAT_F(bc, bc2, grid_dim, block_dim) cups::kernel_umat_f<bc,bc2><<<grid_dim, block_dim>>>(\
     T,\
@@ -675,9 +675,9 @@ kernel_umat(
 		float x = timeArr[tofs + zz*bthc + bth];
 
 	  #pragma unroll
-		for (int r = 0; r < bc; r++) 
+		for (int r = 0; r < bc; r++)
 		  rfvec[r] = f(cm_ri[r], cm_lambdaArr[r], x);
-		 
+
 		// update u
 		max = 0.0f;
 		#pragma unroll
@@ -702,7 +702,7 @@ kernel_umat(
 		float exf = POW2(-ex);
 
 		#pragma unroll
-		for (int r = 0; r < bc; r++) 
+		for (int r = 0; r < bc; r++)
 			#pragma unroll
 			for (int c = 0; c < bc; c++)
 				 rumat[r*bc+c] *= exf;
@@ -712,7 +712,7 @@ kernel_umat(
 
 	#pragma unroll
 	for (int r = 0; r < bc; r++)
-		#pragma unroll 
+		#pragma unroll
 		for (int c = 0; c < bc; c++)
 		  umat2[l*bc*bc+r*bc+c] = umat[ii(uofs, bc, r, c, bth, bthc)] = rumat[r*bc+c];
 
@@ -763,9 +763,9 @@ kernel_umat_f(
 	for (int z = zi, zz = 0; z < ze; z++, zz++) {
 
 		#pragma unroll
-		for (int r = 0; r < bc; r++) 
+		for (int r = 0; r < bc; r++)
 			rfvec[r] = fvec[fofs + (zz*bc+r)*bthc + bth];
-		 
+
 		// update u
 		max = 0.0f;
 		#pragma unroll
@@ -790,7 +790,7 @@ kernel_umat_f(
 		float exf = POW2(-ex);
 
 		#pragma unroll
-		for (int r = 0; r < bc; r++) 
+		for (int r = 0; r < bc; r++)
 			#pragma unroll
 			for (int c = 0; c < bc; c++)
 				 rumat[r*bc+c] *= exf;
@@ -799,7 +799,7 @@ kernel_umat_f(
 	}
 	#pragma unroll
 	for (int r = 0; r < bc; r++)
-		#pragma unroll 
+		#pragma unroll
 		for (int c = 0; c < bc; c++)
 			 umat2[l*bc*bc+r*bc+c] = umat[ii(uofs, bc, r, c, bth, bthc)] = rumat[r*bc+c];
 
@@ -810,7 +810,7 @@ kernel_umat_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_vec_a<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_VEC_A(bc, bc2, grid_dim, block_dim) cups::kernel_vec_a<bc,bc2><<<grid_dim, block_dim, 0>>>(\
     K,\
@@ -830,7 +830,7 @@ kernel_umat_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_vec_a_f<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_VEC_A_F(bc, bc2, grid_dim, block_dim) cups::kernel_vec_a_f<bc, bc2><<<grid_dim, block_dim, 0>>>(\
     K,\
@@ -850,7 +850,7 @@ kernel_umat_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_vec_b<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_VEC_B(bc, bc2, grid_dim, block_dim) cups::kernel_vec_b<bc,bc2><<<grid_dim, block_dim, 0>>>(\
     K,\
@@ -869,7 +869,7 @@ kernel_umat_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_vec_b_f<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_VEC_B_F(bc, bc2, grid_dim, block_dim) cups::kernel_vec_b_f<bc, bc2><<<grid_dim, block_dim, 0>>>(\
     K,\
@@ -891,7 +891,7 @@ int vab(int ofs, int bc, int vi, int i, int bth, int bthc){
   return ofs + (vi*bc + i)*bthc + bth;
 }
 
-__device__ 
+__device__
 int sab(int ofs, int vi, int bth, int bthc){
   return ofs + vi*bthc + bth;
 }
@@ -902,9 +902,9 @@ int vabn(int K, int ofs, int bc, int vi, int i, int bth, int bthc){
   if(vi == K){
     vi = 0;
     bth++;
-    if(bth == bthc){  
+    if(bth == bthc){
       bth = 0;
-      ofs += bthc*K*bc; 
+      ofs += bthc*K*bc;
     }
   }
   return ofs + (vi*bc + i)*bthc + bth;
@@ -917,9 +917,9 @@ int sabn(int K, int ofs, int vi, int bth, int bthc){
   if(vi == K){
     vi = 0;
     bth++;
-    if(bth == bthc){  
+    if(bth == bthc){
       bth = 0;
-      ofs += bthc*K; 
+      ofs += bthc*K;
     }
   }
   return ofs + vi*bthc + bth;
@@ -956,20 +956,20 @@ kernel_vec_a(
 	float prev_rab[bc];
 
 	int ex;
-	float exf, max; 
+	float exf, max;
 
 	int zi = l * K;
 	int ze = zi + K;
 	ze = (ze > T ? T : ze);
 
-	#pragma unroll    
+	#pragma unroll
 	for(int c = 0; c < bc; c++)
 		a[vab(fofs, bc, 0, c, bth, bthc)] = la[l*bc+c];
   aex[sab(tofs, 0, bth, bthc)] = laex[l];
 
   #pragma unroll
 	for (int c = 0; c < bc; c++)
-	  prev_rab[c] = a[vab(fofs, bc, 0, c, bth, bthc)]; 
+	  prev_rab[c] = a[vab(fofs, bc, 0, c, bth, bthc)];
 	int prev_aex = laex[l];
 
 	// va
@@ -983,7 +983,7 @@ kernel_vec_a(
       #pragma unroll
 		  for (int k = 0; k < bc; k++)
 		    sum = fmaf(prev_rab[k], cm_pArr[k*bc + c]*f(cm_ri[k], cm_lambdaArr[k], x), sum);
-		 
+
 			rab[c] = sum;
 			max = MAXX(max, sum);
 		}
@@ -1035,20 +1035,20 @@ kernel_vec_a_f(
 	float prev_rab[bc];
 
 	int ex;
-	float exf, max; 
+	float exf, max;
 
 	int zi = l * K;
 	int ze = zi + K;
 	ze = (ze > T ? T : ze);
 
-	#pragma unroll    
+	#pragma unroll
 	for(int c = 0; c < bc; c++)
 		a[vab(fofs, bc, 0, c, bth, bthc)] = la[l*bc+c]/*la[l*bc+c]*/;
 	  aex[sab(tofs, 0, bth, bthc)] = laex[l];
 
 	#pragma unroll
 	for (int c = 0; c < bc; c++)
-	  prev_rab[c] = a[vab(fofs, bc, 0, c, bth, bthc)]; 
+	  prev_rab[c] = a[vab(fofs, bc, 0, c, bth, bthc)];
 	int prev_aex = laex[l];
 
 	// va
@@ -1061,7 +1061,7 @@ kernel_vec_a_f(
 			#pragma unroll
 			for (int k = 0; k < bc; k++)
 				sum = fmaf(prev_rab[k], cm_pArr[k*bc + c]*fvec[fofs + (zz*bc+k)*bthc + bth], sum);
-		 
+
 			rab[c] = sum;
 			max = MAXX(max, sum);
 		}
@@ -1115,7 +1115,7 @@ kernel_vec_b(
 	float prev_rab[bc];
 
 	int ex;
-	float exf, max; 
+	float exf, max;
 
 	int zi = l * K;
 	int ze = zi + K;
@@ -1183,7 +1183,7 @@ kernel_vec_b_f(
 	float prev_rab[bc];
 
 	int ex;
-	float exf, max; 
+	float exf, max;
 
 	int zi = l * K;
 	int ze = zi + K;
@@ -1225,7 +1225,7 @@ kernel_vec_b_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_arr_s2_s3<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_ARR_S2_S3(bc, bc2, grid_dim, block_dim) cups::kernel_arr_s2_s3<bc,bc2><<<grid_dim, block_dim, 0>>>(\
     T,\
@@ -1243,7 +1243,7 @@ kernel_vec_b_f(
  cudaOccupancyMaxActiveBlocksPerMultiprocessor( &maxActiveBlocks, \
                                                  cups::kernel_arr_s2_s3_f<bc, bc2>, h,\
                                                  0);
- 
+
 
 #define KERNEL_ARR_S2_S3_F(bc, bc2, grid_dim, block_dim) cups::kernel_arr_s2_s3_f<bc,bc2><<<grid_dim, block_dim, 0>>>(\
     T,\
@@ -1311,13 +1311,13 @@ kernel_arr_s2_s3(
 	s3arrex[l] = exm;
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 		#pragma unroll
-		for (int j = 0; j < bc; j++) 
+		for (int j = 0; j < bc; j++)
 			rsarrm[i*bc+j] = 0.0f;
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 			rsarrv[i] = 0.0f;
 
 	for (int z = zi, zz = 0; z < ze; z++, zz++) {
@@ -1335,29 +1335,29 @@ kernel_arr_s2_s3(
 	  for (int i = 0; i < bc; i++) {
 		  float fval = f(cm_ri[i], cm_lambdaArr[i], x);
 
-		  float aval = a[vab(fofs, bc, zz, i, bth, bthc)]; 
+		  float aval = a[vab(fofs, bc, zz, i, bth, bthc)];
 		  rsarrv[i] = fmaf(exfv, aval  * x * b[vab(fofs, bc, zz, i, bth, bthc)], rsarrv[i]);
 
 			if(z < T-1){
 		  	#pragma unroll
-				for (int j = 0; j < bc; j++) 
+				for (int j = 0; j < bc; j++)
 		      rsarrm[i*bc+j] = fmaf(exfm, (fval*aval) * cm_pArr[i * bc + j] * rvec[j], rsarrm[i*bc+j]);
 		  }
 		}
 	}
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 		#pragma unroll
-		for (int j = 0; j < bc; j++) 
+		for (int j = 0; j < bc; j++)
 			s3arr[l*bc*bc + i*bc + j] = rsarrm[i*bc+j];
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 		s2arr[l*bc + i] = rsarrv[i];
 
 }
-  
+
 template<int bc, int bc2>
 __global__ void
 kernel_arr_s2_s3_f(
@@ -1389,7 +1389,7 @@ kernel_arr_s2_s3_f(
 	int fofs = bthc * blockIdx.x * K * bc;
 	int tofs = bthc * blockIdx.x * K;
 
-	
+
 	float rsarrm[bc2];
 	float rsarrv[bc];
 
@@ -1411,13 +1411,13 @@ kernel_arr_s2_s3_f(
 	s3arrex[l] = exm;
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 		#pragma unroll
-		for (int j = 0; j < bc; j++) 
+		for (int j = 0; j < bc; j++)
 			rsarrm[i*bc+j] = 0.0f;
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 			rsarrv[i] = 0.0f;
 
 
@@ -1435,25 +1435,25 @@ kernel_arr_s2_s3_f(
 		for (int i = 0; i < bc; i++) {
 			float fval = fvec[fofs + (zz*bc+i)*bthc + bth];
 
-			float aval = a[vab(fofs, bc, zz, i, bth, bthc)]; 
+			float aval = a[vab(fofs, bc, zz, i, bth, bthc)];
 			rsarrv[i] = fmaf(exfv, aval  * x * b[vab(fofs, bc, zz, i, bth, bthc)], rsarrv[i]);
 
 			if(z < T-1){
 				#pragma unroll
-				for (int j = 0; j < bc; j++) 
+				for (int j = 0; j < bc; j++)
 					 rsarrm[i*bc+j] = fmaf(exfm, (fval*aval) * cm_pArr[i * bc + j] * rvec[j], rsarrm[i*bc+j]);
 			}
 		}
 	}
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 		#pragma unroll
-		for (int j = 0; j < bc; j++) 
+		for (int j = 0; j < bc; j++)
 			s3arr[l*bc*bc + i*bc + j] = rsarrm[i*bc+j];
 
 	#pragma unroll
-	for (int i = 0; i < bc; i++) 
+	for (int i = 0; i < bc; i++)
 		s2arr[l*bc + i] = rsarrv[i];
 }
 
@@ -1507,11 +1507,11 @@ void vec_la(
     float *umat, int *umatex,
     float *alphaArr, float *cm_p2t
 ){
-    
+
   int ex;
   float exf;
   float max = 0.0f;
-    
+
   // forward vectors
   for (int c = 0; c < bc; c++){
     la[0*bc + c] = alphaArr[c];
@@ -1536,7 +1536,7 @@ void vec_la(
     exf = POW2(-ex);
     for(int c = 0; c < bc; c++)
       la[(l+1)*bc+c]  *= exf;
-    
+
     laex[l+1] = laex[l] + ex + umatex[l];
   }
 }
@@ -1548,7 +1548,7 @@ void vec_lb(
     float *umat, int *umatex,
     float *alphaArr, float *cm_p2t
 ){
-    
+
   int ex;
   float exf;
   float max = 0.0f;
@@ -1623,7 +1623,7 @@ void s2_from_o2mat(
       int bthc = h;
       int bth = l % bthc;
       int bidx = (l-bth) / bthc;
-      int o2ofs = bthc * bidx * bc * bc * bc;     
+      int o2ofs = bthc * bidx * bc * bc * bc;
 
       int ex = laex[l] + lbex[l+1] + o2matex[l];
       exf = POW2(ex - s2ex);
@@ -1699,7 +1699,7 @@ void sums_s1(
 
   for (int z = zi; z < ze; z++) {
     x = timeArr[tt(z, h, K)];
- 
+
     for (int c = 0; c < bc; c++)
       vec[c] = last_ab[c];
 
@@ -1764,9 +1764,9 @@ void sums_s1_given_last_a(
   float factorA = POW2(exA-ex);
   float factorB = POW2(exB-ex);
 
-  for (int i = 0; i < bc; i++) 
+  for (int i = 0; i < bc; i++)
     s1[i] = factorA*s3[i] + factorB*last_ab[i];
-  
+
   s1ex = ex;
 }
 
@@ -1793,11 +1793,11 @@ void s2_from_o2vec(
       int bthc = h;
       int bth = l % bthc;
       int bidx = (l-bth) / bthc;
-      int v2ofs = bthc * bidx * bc * bc;     
-     
+      int v2ofs = bthc * bidx * bc * bc;
+
       int ex = o2vecex[l] + lbex[l+1];
       float exf = POW2(ex - s2ex);
- 
+
       float sum = 0;
       for (int k = 0; k < bc; k++)
         sum += o2vec[vi(v2ofs, bc, i, k, bth, bthc)] * lb[(l+1)*bc+k];
@@ -1831,8 +1831,8 @@ void s3_from_o3vec(
 				int bthc = h;
 				int bth = l % bthc;
 				int bidx = (l-bth) / bthc;
-				int v3ofs = bthc * bidx * bc * bc * bc;     
- 
+				int v3ofs = bthc * bidx * bc * bc * bc;
+
         int ex = o3vecex[l] + lbex[l+1];
         float exf = POW2(ex - s3ex);
 
@@ -1868,35 +1868,35 @@ void sums_s2_s3(
   s3ex = INT_MIN;
   for (int l = 0; l < L; l++)
     s3ex = MAXX(s3ex, s3arrex[l]);
-    
+
   for(int i = 0; i < bc; i++)
     s2[i] = 0;
 
   for (int l = 0; l < L; l++){
     float exf = POW2(s2arrex[l] - s2ex);
-    for (int i = 0; i < bc; i++) 
+    for (int i = 0; i < bc; i++)
      s2[i] += s2arr[l*bc+i] * exf;
   }
 
-  for (int i = 0; i < bc; i++) 
-    for (int j = 0; j < bc; j++) 
-      S3[i*bc + j] = 0; 
+  for (int i = 0; i < bc; i++)
+    for (int j = 0; j < bc; j++)
+      S3[i*bc + j] = 0;
 
   for (int l = 0; l < L; l++){
     float exf = POW2(s3arrex[l] - s3ex);
- 
-    for (int i = 0; i < bc; i++) 
-      for (int j = 0; j < bc; j++) 
+
+    for (int i = 0; i < bc; i++)
+      for (int j = 0; j < bc; j++)
         S3[i * bc + j] += s3arr[l*bc*bc + i*bc + j] * exf;
   }
 
-  for (int i = 0; i < bc; i++){ 
-    s3[i] = 0; 
-    for (int j = 0; j < bc; j++) 
+  for (int i = 0; i < bc; i++){
+    s3[i] = 0;
+    for (int j = 0; j < bc; j++)
       s3[i] += S3[i * bc + j];
   }
 }
- 
+
 void param_estim(
     int T, int bc,
     float lh, int lhex,
@@ -1934,7 +1934,7 @@ void ErChmmEmCuda::prepare(
     float *timeArr,
     int h,
     int parSize,
-    float eps, 
+    float eps,
     int minIterCount,
     int maxIterCount
 ){
@@ -1946,7 +1946,7 @@ void ErChmmEmCuda::prepare(
   mImpl = impl;
   mBc = bc;
 
-  // derived 
+  // derived
   int parCount; // number of partitions
   int parCountEx; // number of partitions, granularity of 'h'
   int timeCountEx; // number of inter-arrivals, granularity of 'parSize'
@@ -1956,7 +1956,7 @@ void ErChmmEmCuda::prepare(
   int parCountRem = parCount % h;
   parCountEx = parCount;
   if(parCountRem != 0)
-    parCountEx = parCount + (h - parCountRem); 
+    parCountEx = parCount + (h - parCountRem);
 
   int timeCountRem = timeCount % (h * parSize);
   timeCountEx = timeCount;
@@ -2001,10 +2001,10 @@ void ErChmmEmCuda::prepare(
   mfacinv = new float[mMaxR];
   mfacinv[0] = 1;
   for(int i = 1; i < mMaxR; i++)
-    mfacinv[i] = i*mfacinv[i-1];  
+    mfacinv[i] = i*mfacinv[i-1];
 
   for(int i = 0; i < mMaxR; i++)
-    mfacinv[i] =  1.0 / mfacinv[i];  
+    mfacinv[i] =  1.0 / mfacinv[i];
 
   // mp2t
   int minEx = -149;
@@ -2012,7 +2012,7 @@ void ErChmmEmCuda::prepare(
   mp2t = new float[maxEx - minEx + 1];
   for (int i = minEx; i <= maxEx; i++)
     mp2t[i - minEx] = powf(2.0f, i);
- 
+
 
   int deviceCount = 0;
   checkCudaErrors( cudaGetDeviceCount(&deviceCount));
@@ -2030,17 +2030,17 @@ void ErChmmEmCuda::prepare(
   bc_lambdaArr = sizeof(float) * bc;
   bc_pArr = sizeof(float) * bc * bc;
   bc_timeArr = sizeof(float) * Tex;
-    
+
   checkCudaErrors( cudaMalloc((void **)&dv_riArr, bc_riArr) );
   checkCudaErrors( cudaMalloc((void **)&dv_alphaArr, bc_alphaArr) );
   checkCudaErrors( cudaMalloc((void **)&dv_lambdaArr, bc_lambdaArr) );
   checkCudaErrors( cudaMalloc((void **)&dv_pArr, bc_pArr) );
   checkCudaErrors( cudaMalloc((void **)&dv_timeArr, bc_timeArr) );
-   
+
   mla = new float[(L+1) * bc]; mlaex = new int[L+1];
   mlb = new float[(L+1) * bc]; mlbex = new int[L+1];
   mlast_ab = new float[bc];
-    
+
   ms1 = new float[bc];
   ms2 = new float[bc];
   ms3 = new float[bc];
@@ -2048,18 +2048,18 @@ void ErChmmEmCuda::prepare(
 
   mumat = new float[Lex * bc * bc]; mumatex = new int[L];
   mvec = new float[Lex * bc];
-  
+
   bc_umat = sizeof(float) * Lex * bc * bc;  bc_umatex = sizeof(int) * L;
   bc_mmat = sizeof(float) * Lex * bc * bc;
   bc_vec = sizeof(float) * Lex * bc;
 
   checkCudaErrors( cudaMalloc((void **)&dv_umat, bc_umat) );
   checkCudaErrors( cudaMalloc((void **)&dv_umat2, bc_umat) );
- 
+
   checkCudaErrors( cudaMalloc((void **)&dv_umatex, bc_umatex) );
   checkCudaErrors( cudaMalloc((void **)&dv_mmat, bc_mmat) );
   checkCudaErrors( cudaMalloc((void **)&dv_vec, bc_vec) );
- 
+
   if (impl == P_1) {
     mo2mat = new float[Lex * bc * bc * bc];        mo2matex = new int[L];
     mo3mat = new float[Lex * bc * bc * bc * bc];   mo3matex = new int[L];
@@ -2071,14 +2071,14 @@ void ErChmmEmCuda::prepare(
 		checkCudaErrors( cudaMalloc((void **)&dv_o2matex, bc_o2matex) );
 		checkCudaErrors( cudaMalloc((void **)&dv_o3mat, bc_o3mat) );
 		checkCudaErrors( cudaMalloc((void **)&dv_o3matex, bc_o3matex) );
-      
+
 	}
 	if (impl == P_2 || impl == P_2_D) {
 
 		mo2vec = new float[Lex * bc * bc];      mo2vecex = new int[L];
 		mo3vec = new float[Lex * bc * bc * bc]; mo3vecex = new int[L];
 
-		bc_uvec = sizeof(float) * Lex * bc;      
+		bc_uvec = sizeof(float) * Lex * bc;
 		bc_o2vec = sizeof(float) * Lex * bc * bc;       bc_o2vecex = sizeof(int) * L;
 		bc_o3vec = sizeof(float) * Lex * bc * bc * bc;  bc_o3vecex = sizeof(int) * L;
 
@@ -2092,7 +2092,7 @@ void ErChmmEmCuda::prepare(
 			 bc_fvec = sizeof(float) * Tex * bc;
 			 checkCudaErrors( cudaMalloc((void **)&dv_fvec, bc_fvec) );
 		 }
- 
+
 		 bc_la = sizeof(float) * (L+1) * bc;  bc_laex = sizeof(int) * (L+1);
 		 bc_lb = sizeof(float) * (L+1) * bc;  bc_lbex = sizeof(int) * (L+1);
 
@@ -2107,7 +2107,7 @@ void ErChmmEmCuda::prepare(
 		ms2arr = new float[Lex * bc];      ms2arrex = new int[L];
 		ms3arr = new float[Lex * bc * bc]; ms3arrex = new int[L];
 
-		bc_uvec = sizeof(float) * Lex * bc;      
+		bc_uvec = sizeof(float) * Lex * bc;
 		bc_a = sizeof(float) * Tex * bc;            bc_aex = sizeof(int)*(Tex);
 		bc_b = sizeof(float) * Tex * bc;            bc_bex = sizeof(int)*(Tex);
 		bc_s2arr = sizeof(float) * Lex * bc;       bc_s2arrex = sizeof(int) * L;
@@ -2143,7 +2143,7 @@ void ErChmmEmCuda::prepare(
 		 bc_last_a = sizeof(float)*bc;
 
 		 bc_last_a_ex = sizeof(int);
-		 
+
 		 checkCudaErrors( cudaMalloc((void **)&dv_last_a, bc_last_a) );
 		 checkCudaErrors( cudaMalloc((void **)&dv_last_a_ex, bc_last_a_ex) );
 	}
@@ -2154,18 +2154,18 @@ void ErChmmEmCuda::calc(){
   int impl = mImpl;
   int T = mTimeCount;
   int K = mParSize;
-  int bc = mBc; 
+  int bc = mBc;
   int h = mH;
   int L = mParCount;
 
   // parameters
   float *alphaArr = mAlphaArr;
-  float *pArr = mPArr; 
+  float *pArr = mPArr;
   float *lambdaArr = mLambdaArr;
   int *ri = mRi;
 
   float *cm_p2t = mp2t;
-  
+
   // data
   float *timeArr = mTimeArr;
 
@@ -2191,13 +2191,13 @@ void ErChmmEmCuda::calc(){
   float *s3 = ms3;  int s3ex;
   float *S3 = mS3;
 
-  float logli = -FLT_MAX, ologli = -FLT_MAX; 
+  float logli = -FLT_MAX, ologli = -FLT_MAX;
   float log2 = log(2.0);
   float stopCriteria = log(1 + mEps);
-  bool storef = impl == P_2_D || impl == P_3_D; 
+  bool storef = impl == P_2_D || impl == P_3_D;
 
   // copy to device
-  checkCudaErrors( cudaMemcpy(dv_timeArr, timeArr, bc_timeArr, cudaMemcpyHostToDevice) ); 
+  checkCudaErrors( cudaMemcpy(dv_timeArr, timeArr, bc_timeArr, cudaMemcpyHostToDevice) );
 
   checkCudaErrors( cudaMemcpyToSymbol( cups::cm_p2t, mp2t, sizeof(float)*277) );
   checkCudaErrors( cudaMemcpyToSymbol( cups::cm_facinv, mfacinv, sizeof(float)*mMaxR) );
@@ -2259,7 +2259,7 @@ void ErChmmEmCuda::calc(){
         if(bc == 8) KERNEL_STORE_F(8, 64, grid_dim, block_dim);
         if(bc == 9) KERNEL_STORE_F(9, 81, grid_dim, block_dim);
         if(bc == 10) KERNEL_STORE_F(10, 100, grid_dim, block_dim);
- 
+
         if(bc == 2) KERNEL_UMAT_F(2, 4, grid_dim, block_dim);
         if(bc == 3) KERNEL_UMAT_F(3, 9, grid_dim, block_dim);
         if(bc == 4) KERNEL_UMAT_F(4, 16, grid_dim, block_dim);
@@ -2281,13 +2281,13 @@ void ErChmmEmCuda::calc(){
         if(bc == 8) KERNEL_UMAT(8, 64, grid_dim, block_dim);
         if(bc == 9) KERNEL_UMAT(9, 81, grid_dim, block_dim);
         if(bc == 10) KERNEL_UMAT(10, 100, grid_dim, block_dim);
- 
+
       }
 
       checkCudaErrors( cudaMemcpy(umat, dv_umat2, bc_umat, cudaMemcpyDeviceToHost) );
       checkCudaErrors( cudaMemcpy(umatex, dv_umatex, bc_umatex, cudaMemcpyDeviceToHost) );
     }
-      
+
     if (impl == P_1 || impl == P_2 || impl == P_2_D) {
 
 			vec_la(h, L, bc, la, laex, umat, umatex, alphaArr, cm_p2t);
@@ -2303,9 +2303,9 @@ void ErChmmEmCuda::calc(){
 
 			checkCudaErrors( cudaMemcpy(dv_lb, lb, bc_lb, cudaMemcpyHostToDevice) );
 			checkCudaErrors( cudaMemcpy(dv_lbex, lbex, bc_lbex, cudaMemcpyHostToDevice) );
- 
+
       if(storef == false ){
- 
+
         if(bc == 2) KERNEL_VEC_A(2, 4, grid_dim, block_dim);
         if(bc == 3) KERNEL_VEC_A(3, 9, grid_dim, block_dim);
         if(bc == 4) KERNEL_VEC_A(4, 16, grid_dim, block_dim);
@@ -2360,12 +2360,12 @@ void ErChmmEmCuda::calc(){
 
 
     // log-likelihood computation
-    float lh; 
+    float lh;
     int lhex;
-   
+
     calc_lh(h, L, bc, la, laex, lh, lhex, cm_p2t);
     ologli = logli;
-    logli = log(lh) + lhex*log(2); 
+    logli = log(lh) + lhex*log(2);
 
     // checking for stop conditions
     if (iter > mMinIterCount + 1)
@@ -2439,7 +2439,7 @@ void ErChmmEmCuda::calc(){
         if(bc == 8) KERNEL_ARR_S2_S3_F(8, 64, grid_dim, block_dim);
         if(bc == 9) KERNEL_ARR_S2_S3_F(9, 81, grid_dim, block_dim);
         if(bc == 10) KERNEL_ARR_S2_S3_F(10, 100, grid_dim, block_dim);
-        
+
       } else {
 
         if(bc == 2) KERNEL_ARR_S2_S3(2, 4, grid_dim, block_dim);
@@ -2472,7 +2472,7 @@ void ErChmmEmCuda::calc(){
 
   }
 
-  mLogLikelihood = logli; 
+  mLogLikelihood = logli;
 
 }
 
@@ -2488,7 +2488,7 @@ void ErChmmEmCuda::finish(){
   delete [] mla;  delete [] mlaex;
   delete [] mlb;  delete [] mlbex;
   delete [] mlast_ab;
-    
+
   delete [] ms1;
   delete [] ms2;
   delete [] ms3;
@@ -2499,7 +2499,7 @@ void ErChmmEmCuda::finish(){
 
   delete [] mp2t;
   delete [] mfacinv;
-   
+
   checkCudaErrors( cudaFree(dv_riArr) );
   checkCudaErrors( cudaFree(dv_alphaArr) );
   checkCudaErrors( cudaFree(dv_lambdaArr) );
@@ -2536,7 +2536,7 @@ void ErChmmEmCuda::finish(){
 
     if (mImpl == P_2_D)
       checkCudaErrors( cudaFree(dv_fvec) );
-    
+
     checkCudaErrors( cudaFree(dv_la) );
     checkCudaErrors( cudaFree(dv_laex) );
     checkCudaErrors( cudaFree(dv_lb) );
@@ -2547,13 +2547,13 @@ void ErChmmEmCuda::finish(){
 
     if (mImpl == P_3_D)
       checkCudaErrors( cudaFree(dv_fvec) );
-     
+
 
     checkCudaErrors( cudaFree(dv_a) );
     checkCudaErrors( cudaFree(dv_aex) );
     checkCudaErrors( cudaFree(dv_b) );
     checkCudaErrors( cudaFree(dv_bex) );
- 
+
     delete [] ms2arr; delete [] ms2arrex;
     delete [] ms3arr; delete [] ms3arrex;
 
@@ -2577,7 +2577,7 @@ void ErChmmEmCuda::finish(){
   }
 
   checkCudaErrors(cudaDeviceReset());
-}    
+}
 
 float ErChmmEmCuda::getLogLikelihood(){
   return mLogLikelihood;
@@ -2594,5 +2594,3 @@ float* ErChmmEmCuda::getLambdaArr(){
 float* ErChmmEmCuda::getPArr(){
   return mPArr;
 }
-
-

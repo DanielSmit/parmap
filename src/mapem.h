@@ -26,16 +26,16 @@ class ErChmmEm {
 
     int mTimeCount;
     int mBc;
-    int mSumVarCount;  
+    int mSumVarCount;
     float mMaxPhi;
- 
+
     int *mRi;
     float *mLambdaArr;
     float *mPArr;
     float *mAlphaArr;
     float *mTimeArr;
- 
-  
+
+
     float *msumqk;
     float *msumxqk;
 
@@ -45,7 +45,7 @@ class ErChmmEm {
     int *maScale;
     int *mbScale;
     float *mnewP;
- 
+
     float *mqVecCurr;
 
     float mLogLikelihood;
@@ -59,7 +59,7 @@ class ErChmmEm {
       float *lambdaArr,
       float *pArr,
       int timeCount,
-      float *timeArr, 
+      float *timeArr,
       int minIterCount,
       int maxIterCount,
       float eps,
@@ -85,7 +85,7 @@ class ErChmmEm {
     void sum_vec_values(float *vecArr);
     void add_mat_value(float value, float *matArr, int i, int j,  int to);
     void sum_mat_values(float *matArr);
- 
+
 };
 
 /* Parallel implementations using CUDA. */
@@ -93,7 +93,7 @@ class ErChmmEmCuda  {
 
   private:
 
-    /* Iteration stop conditions. */    
+    /* Iteration stop conditions. */
 
     int mMinIterCount;
     int mMaxIterCount;
@@ -103,7 +103,7 @@ class ErChmmEmCuda  {
 
     int mBc;          // number of branches in ER-CHMM structure
 
-    int *mRi;   
+    int *mRi;
     float *mLambdaArr;
     float *mPArr;
     float *mAlphaArr;
@@ -115,9 +115,9 @@ class ErChmmEmCuda  {
 
     /* Execution configuration.  */
 
-    int mParSize;     // the size of partition 
-    int mImpl;        // the implementation, valid values are P_1, P_2, P_2_D, P_3, P_3_D 
-    int mH;           // number of threads per block, multiple of 32 
+    int mParSize;     // the size of partition
+    int mImpl;        // the implementation, valid values are P_1, P_2, P_2_D, P_3, P_3_D
+    int mH;           // number of threads per block, multiple of 32
 
     /* Some derived charasteristics. */
 
@@ -177,7 +177,7 @@ class ErChmmEmCuda  {
     float *dv_o3mat;     int bc_o3mat;
     int *dv_o2matex;     int bc_o2matex;
     int *dv_o3matex;     int bc_o3matex;
-   
+
     float *dv_o2vec;     int bc_o2vec;
     float *dv_o3vec;     int bc_o3vec;
     int *dv_o2vecex;     int bc_o2vecex;
@@ -201,11 +201,11 @@ class ErChmmEmCuda  {
     float *dv_s3arr;        int bc_s3arr;
     int *dv_s2arrex;        int bc_s2arrex;
     int *dv_s3arrex;        int bc_s3arrex;
-    
+
     float *dv_umat;      int bc_umat;     int *dv_umatex;      int bc_umatex;
     float *dv_umat2;  // for storing partition density matrices in natural indexing, for faster access on CPU
     float *dv_mmat;      int bc_mmat;
-    float *dv_vec;       int bc_vec; 
+    float *dv_vec;       int bc_vec;
 
     float *last_a; int *last_a_ex;
     float *dv_last_a;  int bc_last_a; int *dv_last_a_ex; int bc_last_a_ex;
@@ -213,7 +213,7 @@ class ErChmmEmCuda  {
     /* The log-likelihood value of obtained solution.  */
 
     float mLogLikelihood;
-    
+
   public:
 
     void prepare(
@@ -227,14 +227,14 @@ class ErChmmEmCuda  {
       float *timeArr,
       int h,
       int parSize,
-      float eps, 
+      float eps,
       int minIterCount,
       int maxIterCount
     );
 
     void calc();
     void finish();
-   
+
     float getLogLikelihood();
     float* getAlphaArr();
     float* getLambdaArr();

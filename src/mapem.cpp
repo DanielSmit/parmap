@@ -21,10 +21,10 @@ void ErChmmEm::prepare(
     float *lambdaArr,
     float *pArr,
     int timeCount,
-    float *timeArr, 
+    float *timeArr,
     int minIterCount,
     int maxIterCount,
-    float eps, 
+    float eps,
     int sumVarCount,
     float maxPhi
   ){
@@ -54,12 +54,12 @@ void ErChmmEm::prepare(
   }
 
   for(int i = 0; i < timeCount; i++)
-    mTimeArr[i] = timeArr[i]; 
+    mTimeArr[i] = timeArr[i];
 
   msumqk = new float[sumVarCount*bc];
   msumxqk = new float[sumVarCount*bc];
   mnewP = new float[sumVarCount*bc*bc];
- 
+
   mfMat = new float[bc*timeCount];
   maMat = new float[bc*timeCount];
   mbMat = new float[bc*timeCount];
@@ -71,10 +71,10 @@ void ErChmmEm::prepare(
 }
 
 void ErChmmEm::add_vec_value(float value, float *vecArr, int i,  int to){
- 
+
   if(to+1 == mSumVarCount){
     vecArr[to*mBc + i] += value;
-    return;  
+    return;
   }
 
   float mag = vecArr[to*mBc + i] / value;
@@ -93,12 +93,12 @@ void ErChmmEm::sum_vec_values(float *vecArr){
     for(int i = 0; i < mBc; i++)
       vecArr[i] += vecArr[sp*mBc + i];
 }
- 
+
 void ErChmmEm::add_mat_value(float value, float *matArr, int i, int j,  int to){
-  
+
   if(to+1 == mSumVarCount){
     matArr[to*mBc*mBc + i*mBc + j] += value;
-    return;  
+    return;
   }
 
   float mag = matArr[to*mBc*mBc + i*mBc + j] / value;
@@ -119,13 +119,13 @@ void ErChmmEm::sum_mat_values(float *matArr){
       for(int j = 0; j < mBc; j++)
         matArr[i*mBc + j] += matArr[sp*mBc*mBc + i*mBc + j];
 }
- 
+
 
 void ErChmmEm::calc(){
 
   // parameters
   float *alphaArr = mAlphaArr;
-  float *pArr = mPArr; 
+  float *pArr = mPArr;
   float *lambdaArr = mLambdaArr;
 
   // data
@@ -143,8 +143,8 @@ void ErChmmEm::calc(){
   // structure
   int bc = mBc;
   int *ri = mRi;
-  
-  float logli = -FLT_MAX, ologli = -FLT_MAX; 
+
+  float logli = -FLT_MAX, ologli = -FLT_MAX;
   float log2 = log(2.0);
   float stopCriteria = log(1 + mEps);
   int iterCounter = 0;
@@ -155,7 +155,7 @@ void ErChmmEm::calc(){
     for(int k = 0; k < mTimeCount; k++) {
       float x = mTimeArr[k];
       for(int m=0; m < bc; m++)
-        fMat[k*bc+m] = computeBranchDensity (x, lambdaArr[m], ri[m]);        
+        fMat[k*bc+m] = computeBranchDensity (x, lambdaArr[m], ri[m]);
     }
 
     // calculate vectors a and vector b (forward and backward likelihood vectors)
@@ -178,9 +178,9 @@ void ErChmmEm::calc(){
         asum += aMat[ofs+i];
       }
       aScale[k] = aScale[k-1];
-      if(asum==0) 
+      if(asum==0)
         break;
-                    
+
 
       int scaleDiff = ceil(log(asum) / log(2));
       aScale[k] += scaleDiff;
@@ -205,7 +205,7 @@ void ErChmmEm::calc(){
         bsum += bMat[ofs+j];
       }
       bScale[k] = bScale[k+1];
-      if(bsum==0) 
+      if(bsum==0)
         break;
 
       int scaleDiff = ceil(log(bsum) / log(2));
@@ -223,7 +223,7 @@ void ErChmmEm::calc(){
     float llhval = 0.0;
     for(int i = 0; i < bc; i++)
       llhval += alphaArr[i]*bMat[i];
-    logli = (log(llhval) + bScale[0] * log2);  
+    logli = (log(llhval) + bScale[0] * log2);
 
     // check for stop conditions
     if(iter > mMinIterCount + 1)
@@ -253,19 +253,19 @@ void ErChmmEm::calc(){
       for(int m = 0; m < bc; m++) {
         float pMul = (k==0 ? alphaArr[m] : aMat[ofs+m-bc]);
         qVecSum += qVecCurr[m] = pMul * bMat[ofs+m];
-                   
+
         if(k < mTimeCount - 1) {
           pMul *= fMat[ofs+m] * normalizer;
           for(int j = 0; j < bc; j++){
             float value =  pMul * pArr[m*bc+j] * bMat[ofs+bc+j];
             add_mat_value(value, newP, m, j, 0);
-          } 
+          }
         }
       }
 
       for(int m = 0; m < bc; m++) {
         float value, mag;
-        value = qVecCurr[m] / qVecSum; 
+        value = qVecCurr[m] / qVecSum;
         add_vec_value(value, sumqk, m, 0);
 
         value = x * qVecCurr[m] / qVecSum;
@@ -280,8 +280,8 @@ void ErChmmEm::calc(){
     // store new estimates
     for(int i = 0; i < bc; i++) {
       lambdaArr[i] = ri[i] * sumqk[i] / sumxqk[i];
-      alphaArr[i] = sumqk[i] / mTimeCount; 
- 
+      alphaArr[i] = sumqk[i] / mTimeCount;
+
       float rowSum = 0.0;
       for(int j = 0; j < bc; j++)
         rowSum += newP[i*bc+j];
@@ -290,7 +290,7 @@ void ErChmmEm::calc(){
     }
   }
 
-  mLogLikelihood = logli; 
+  mLogLikelihood = logli;
 }
 
 void ErChmmEm::finish(){
@@ -315,11 +315,11 @@ void ErChmmEm::finish(){
 
 
   delete [] mqVecCurr;
-}    
+}
 
 
 
- 
+
 float ErChmmEm::computeBranchDensity(float x, float lambda, int branchSize){
   float erlFact = lambda;
   for (int n=1; n < branchSize; n++)
@@ -342,6 +342,3 @@ float* ErChmmEm::getLambdaArr(){
 float* ErChmmEm::getPArr(){
   return mPArr;
 }
-
-
-
