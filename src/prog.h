@@ -37,4 +37,31 @@ void next_structure(int n, int &bc, int *ri);
 bool last_structure(int n, int &bc, int *ri);
 vector<Structure*>* generate_all_structures(int n);
 
+//
+// ErChmm
+//
+// ER-CHMM parameters
+//
+class ErChmm {
+  private:
+    int mBc;
+    int *mRi;
+    double *mLambda; // Erlang branch transition rates
+    double *mP;      // Erlang branch switching probabilities
+
+  public:
+    ErChmm();
+    void set(int bc, int *ri, double *lambda, double *P);
+
+    int getBc();
+    int *getRi();
+    double* getLambda();
+    double* getP();
+
+    void print_out();
+    void write_to_file(const char *fileName);
+    void read_from_file(const char *fileName);
+    
+};
+
 #endif /* PROG_HEADER */
