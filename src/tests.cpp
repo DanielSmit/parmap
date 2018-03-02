@@ -434,6 +434,13 @@ bool test_em(int impl){
 
     em->calc();
 
+    em->finish();
+
+    //printf("serial : impl-llh = %e\n", em->getImplLogLikelihood());
+    //printf("serial :      llh = %e\n", em->getLogLikelihood());
+
+
+
   /* ER-CHMM fitting using CUDA */
 
   ErChmmEmCuda *emCuda = new ErChmmEmCuda();
@@ -455,6 +462,11 @@ bool test_em(int impl){
     );
 
   emCuda->calc();
+
+  emCuda->finish();
+
+  //printf("   par : impl-llh = %e\n", emCuda->getImplLogLikelihood());
+  //printf("   par :      llh = %e\n", emCuda->getLogLikelihood());
 
 
 
@@ -487,8 +499,8 @@ bool test_em(int impl){
 
 
   /* Clean up. */
-  em->finish();      delete em;
-  emCuda->finish();  delete emCuda;
+  em->destroy();      delete em;
+  emCuda->destroy();  delete emCuda;
   delete [] pArr;
   delete [] lambdaArr;
   delete [] alphaArr;

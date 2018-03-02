@@ -48,7 +48,9 @@ class ErChmmEm {
 
     float *mqVecCurr;
 
+    float mImplLogLikelihood;
     float mLogLikelihood;
+
 
   public:
 
@@ -69,6 +71,7 @@ class ErChmmEm {
 
     void calc();
     void finish();
+    void destroy();
 
     // memory usage in megabytes
     double getCpuMemoryUsage();
@@ -77,7 +80,9 @@ class ErChmmEm {
 
 
 
+    float getImplLogLikelihood();
     float getLogLikelihood();
+
     float* getAlphaArr();
     float* getLambdaArr();
     float* getPArr();
@@ -118,7 +123,8 @@ class ErChmmEmCuda  {
     /* Inter-arrivals. */
 
     int mTimeCount;   // the number of inter-arrivals
-    float *mTimeArr;  // array of inter-arrivals
+    float *mTimeArr;  // array of inter-arrivals, indexing for cuda
+    float *mTimeArrNat; // array of inter-arrivals, natural indexing, for computing llh in the end
 
     /* Execution configuration.  */
 
@@ -219,7 +225,9 @@ class ErChmmEmCuda  {
 
     /* The log-likelihood value of obtained solution.  */
 
+    float mImplLogLikelihood;
     float mLogLikelihood;
+
 
   public:
 
@@ -241,18 +249,22 @@ class ErChmmEmCuda  {
 
     void calc();
     void finish();
+    void destroy();
 
     // memory usage in megabytes
     double getCpuMemoryUsage();
     double getGpuMemoryUsage();
     double getMemoryUsage();
 
+    float getImplLogLikelihood();
     float getLogLikelihood();
     float* getAlphaArr();
     float* getLambdaArr();
     float* getPArr();
 
 };
+
+double llh(int bc, int *ri, double *lambdaArr, double *pArr, double *alphaArr, int T, float *timeArr);
 
 
 

@@ -71,7 +71,6 @@ void ErChmmEm::prepare(
 }
 
 void ErChmmEm::add_vec_value(float value, float *vecArr, int i,  int to){
-
   if(to+1 == mSumVarCount){
     vecArr[to*mBc + i] += value;
     return;
@@ -169,7 +168,7 @@ void ErChmmEm::calc(){
       for(int j=0; j < bc; j++)
         aMat[i] += alphaArr[j]*fMat[j]*pArr[j*bc+i];
 
-    for(int k = 1; k < bc; k++) {
+    for(int k = 1; k < mTimeCount; k++) {
       int ofs = k*bc;
       float asum = 0.0;
       for(int i = 0; i < bc; i++){
@@ -221,9 +220,10 @@ void ErChmmEm::calc(){
 
     // calculate log-likelihood
     float llhval = 0.0;
-    for(int i = 0; i < bc; i++)
+    for(int i = 0; i < bc; i++){
       llhval += alphaArr[i]*bMat[i];
-    logli = (log(llhval) + bScale[0] * log2);
+    }
+    logli = log(llhval) + bScale[0] * log2;
 
     // check for stop conditions
     if(iter > mMinIterCount + 1)
@@ -241,8 +241,10 @@ void ErChmmEm::calc(){
 
     // calculate new estimates for the parameters
     for(int k = 0; k < mTimeCount; k++) {
+
       int ofs = k*bc;
       float x = mTimeArr[k];
+
       float qVecSum = 0.0;
       float normalizer;
       if(k==0)
@@ -253,7 +255,6 @@ void ErChmmEm::calc(){
       for(int m = 0; m < bc; m++) {
         float pMul = (k==0 ? alphaArr[m] : aMat[ofs+m-bc]);
         qVecSum += qVecCurr[m] = pMul * bMat[ofs+m];
-
         if(k < mTimeCount - 1) {
           pMul *= fMat[ofs+m] * normalizer;
           for(int j = 0; j < bc; j++){
@@ -266,6 +267,7 @@ void ErChmmEm::calc(){
       for(int m = 0; m < bc; m++) {
         float value, mag;
         value = qVecCurr[m] / qVecSum;
+
         add_vec_value(value, sumqk, m, 0);
 
         value = x * qVecCurr[m] / qVecSum;
@@ -288,12 +290,33 @@ void ErChmmEm::calc(){
       for(int j = 0; j < bc; j++)
         pArr[i*bc+j] = newP[i*bc+j] / rowSum;
     }
+
   }
 
-  mLogLikelihood = logli;
+  mImplLogLikelihood = logli;
 }
 
 void ErChmmEm::finish(){
+  int bc = mBc;
+  double *alphaArr = new double[bc];
+  double *lambdaArr = new double[bc];
+  double *pArr = new double[bc*bc];
+  for(int i = 0; i < bc; i++){
+    alphaArr[i] = (double)mAlphaArr[i];
+    lambdaArr[i] = (double)mLambdaArr[i];
+
+    for(int j = 0; j < bc; j++)
+      pArr[i*bc+j] = mPArr[i*bc+j];
+  }
+
+  mLogLikelihood = llh(bc, mRi, lambdaArr, pArr, alphaArr, mTimeCount, mTimeArr);
+
+  delete [] alphaArr;
+  delete [] lambdaArr;
+  delete [] pArr;
+}
+
+void ErChmmEm::destroy(){
 
   delete [] mRi;
   delete [] mLambdaArr;
@@ -331,13 +354,15 @@ double ErChmmEm::getMemoryUsage(){
   return getCpuMemoryUsage() + getGpuMemoryUsage();
 }
 
-
-
 float ErChmmEm::computeBranchDensity(float x, float lambda, int branchSize){
   float erlFact = lambda;
   for (int n=1; n < branchSize; n++)
     erlFact *= lambda * x / n;
   return exp (-lambda * x) * erlFact;
+}
+
+float ErChmmEm::getImplLogLikelihood(){
+  return mImplLogLikelihood;
 }
 
 float ErChmmEm::getLogLikelihood(){
@@ -354,4 +379,89 @@ float* ErChmmEm::getLambdaArr(){
 
 float* ErChmmEm::getPArr(){
   return mPArr;
+}
+
+int factorial(int x){
+  if(x == 0 || x == 1) return 1;
+  return x*factorial(x-1);
+}
+
+double llh(int bc, int *ri, double *lambdaArr, double *pArr, double *alphaArr, int T, float *timeArr){
+
+  int size_ik = bc * T;
+
+  double *farr = new double[size_ik];
+  double *barr = new double[size_ik];
+  int *bExp = new int[size_ik];
+
+  int timeCount = T;
+
+
+
+  double loglikelihood = 0;
+
+  double x;
+  int r;
+  double lambda;
+
+  double runlikelihood;
+
+
+  // calc farr
+  double factor;
+  for (int k = 0; k < timeCount; k++) {
+      x = (double)timeArr[k];
+
+      for (int i = 0; i < bc; i++) {
+          lambda = lambdaArr[i];
+          r = ri[i];
+          factor = pow(lambda * x, r - 1) / (double) factorial(r - 1);
+          farr[i*T+k/*ik(i, k)*/] = factor * lambda * exp(-lambda * x);
+          //printf("farr[%d,%d] = %e\n", i, k, farr[i*T+k/*ik(i, k)*/]);
+      }
+  }
+
+  // calc aarr
+  int power_b;
+  double sum_b;
+  double tmp_b;
+
+  // calc barr
+  for (int k = timeCount - 1; k >= 0; k--) {
+      sum_b = 0;
+
+      for (int j = 0; j < bc; j++) {
+          double b = 0;
+          if (k == timeCount - 1) {
+              b = farr[j*T+k/*ik(j, k)*/];
+          } else {
+              for (int i = 0; i < bc; i++)
+                  b += farr[j*T+k/*ik(j, k)*/] * pArr[j*bc+i/*ij(j, i)*/] * barr[i*T+k+1/*ik(i, k + 1)*/];
+          }
+          barr[j*T+k/*ik(j, k)*/] = b;
+          sum_b += b;
+      }
+
+      // normalize
+      power_b = (int) ceil(log(sum_b) / log(2));
+      bExp[k] = (k == timeCount - 1 ? power_b : bExp[k + 1] + power_b);
+
+      tmp_b = pow(2.0, -power_b);
+      for (int i = 0; i < bc; i++)
+          barr[i*T+k/*ik(i, k)*/] *= tmp_b;
+
+  }
+
+  runlikelihood = 0;
+  for (int i = 0; i < bc; i++){
+      runlikelihood += alphaArr[i] * barr[i*T+0/*ik(i, 0)*/];
+  }
+
+  loglikelihood = log(runlikelihood) + bExp[0] * log(2);
+
+  delete [] barr;
+  delete [] farr;
+  delete [] bExp;
+
+  return loglikelihood;
 }

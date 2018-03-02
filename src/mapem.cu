@@ -1662,10 +1662,22 @@ void s3_from_o3mat(
       S3[i * bc + j] = 0;
 
       for (int l = 0; l < L; l++) {
+
+        int bthc = h;
+        int bth = l % bthc;
+        int bidx = (l-bth) / bthc;
+        int o3ofs = bthc * bidx * bc * bc * bc * bc;
+
         int ex = laex[l] + lbex[l+1] + o3matex[l];
         exf = POW2(ex - s3ex);
 
         float sum2 = 0;
+        for (int c = 0; c < bc; c++) {
+          float sum = 0;
+          for (int k = 0; k < bc; k++)
+            sum += la[l*bc+k]/*la[l * bc + k]*/ * o3mat[mij(o3ofs, bc, i, j, k, c, bth, bthc)];
+          sum2 += sum * lb[(l+1)*bc+c]/*lb[(l + 1) * bc + c]*/;
+        }
         S3[i * bc + j] += sum2*exf;
       }
       s3[i] += S3[i * bc + j];
@@ -1988,9 +2000,11 @@ void ErChmmEmCuda::prepare(
     mRi[i] = ri[i];
   }
 
+  mTimeArrNat = new float[T];
   mTimeArr = new float[Tex];
   for(int i = 0; i < T; i++){
     mTimeArr[tt(i, h, K)] = timeArr[i];
+    mTimeArrNat[i] = timeArr[i];
   }
 
   // facinv
@@ -2213,6 +2227,8 @@ void ErChmmEmCuda::calc(){
   int iterCounter = 0;
   for (int iter = 0; iter < mMaxIterCount + 1; iter++) {
 
+
+
 		checkCudaErrors( cudaMemcpyToSymbol( cups::cm_lambdaArr, lambdaArr, bc_lambdaArr ) );
 		checkCudaErrors( cudaMemcpyToSymbol( cups::cm_pArr, pArr, bc_pArr ) );
 		checkCudaErrors( cudaMemcpyToSymbol( cups::cm_alphaArr, alphaArr, bc_alphaArr ) );
@@ -2244,6 +2260,8 @@ void ErChmmEmCuda::calc(){
 
 		 checkCudaErrors( cudaMemcpy(umat, dv_umat2, bc_umat, cudaMemcpyDeviceToHost) );
 		 checkCudaErrors( cudaMemcpy(umatex, dv_umatex, bc_umatex, cudaMemcpyDeviceToHost) );
+
+
 
     }
     if(impl == P_2 || impl == P_2_D || impl == P_3 || impl == P_3_D){
@@ -2292,6 +2310,7 @@ void ErChmmEmCuda::calc(){
 
 			vec_la(h, L, bc, la, laex, umat, umatex, alphaArr, cm_p2t);
 			vec_lb(h, L, bc, lb, lbex, umat, umatex, alphaArr, cm_p2t);
+
 
     }else if( impl == P_3 || impl == P_3_D ){
 
@@ -2379,6 +2398,7 @@ void ErChmmEmCuda::calc(){
       s2_from_o2mat(h, L, bc, la, laex, lb, lbex, o2mat, o2matex, s2, s2ex, cm_p2t);
       s3_from_o3mat(h, L, bc, la, laex, lb, lbex, o3mat, o3matex, s3, S3, s3ex, cm_p2t);
       sums_s1(h, T, K, L, bc, la, laex, last_ab, s3, s3ex, s1, s1ex, timeArr, pArr, lambdaArr, ri, vec, cm_p2t);
+
     }
 
     if (impl == P_2 || impl == P_2_D) {
@@ -2472,11 +2492,31 @@ void ErChmmEmCuda::calc(){
 
   }
 
-  mLogLikelihood = logli;
+  mImplLogLikelihood = logli;
 
 }
 
 void ErChmmEmCuda::finish(){
+  int bc = mBc;
+  double *alphaArr = new double[bc];
+  double *lambdaArr = new double[bc];
+  double *pArr = new double[bc*bc];
+  for(int i = 0; i < bc; i++){
+    alphaArr[i] = (double)mAlphaArr[i];
+    lambdaArr[i] = (double)mLambdaArr[i];
+
+    for(int j = 0; j < bc; j++)
+      pArr[i*bc+j] = mPArr[i*bc+j];
+  }
+
+  mLogLikelihood = llh(bc, mRi, lambdaArr, pArr, alphaArr, mTimeCount, mTimeArrNat);
+
+  delete [] alphaArr;
+  delete [] lambdaArr;
+  delete [] pArr;
+}
+
+void ErChmmEmCuda::destroy(){
 
   delete [] mRi;
   delete [] mAlphaArr;
@@ -2484,6 +2524,7 @@ void ErChmmEmCuda::finish(){
   delete [] mPArr;
 
   delete [] mTimeArr;
+  delete [] mTimeArrNat;
 
   delete [] mla;  delete [] mlaex;
   delete [] mlb;  delete [] mlbex;
@@ -2595,6 +2636,7 @@ double ErChmmEmCuda::getCpuMemoryUsage(){
   if(mImpl == P_3_D)
     return (T+L*(2*R*R + 3*R + 5) + 2*R*R + 8*R + 6)*(4.0 / 1048576.0);
 
+    return 0;
 }
 
 double ErChmmEmCuda::getGpuMemoryUsage(){
@@ -2614,10 +2656,16 @@ double ErChmmEmCuda::getGpuMemoryUsage(){
     return (T*(2*R+3)+L*(2*R*R + 3*R + 5) + 2*R*R + 5*R + 2)*(4.0 / 1048576.0);
   if(mImpl == P_3_D)
     return (T*(3*R+3)+L*(2*R*R + 3*R + 5) + 2*R*R + 5*R + 2)*(4.0 / 1048576.0);
+
+    return 0;
 }
 
 double ErChmmEmCuda::getMemoryUsage(){
   return getCpuMemoryUsage() + getGpuMemoryUsage();
+}
+
+float ErChmmEmCuda::getImplLogLikelihood(){
+  return mImplLogLikelihood;
 }
 
 float ErChmmEmCuda::getLogLikelihood(){
