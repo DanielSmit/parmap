@@ -735,10 +735,39 @@ void Interarrivals::print_out(){
 }
 
 void Interarrivals::write_to_file(const char *fileName){
+  FILE *file = fopen(fileName, "wb");
 
+  fwrite(&mCount, sizeof(int), 1, file);
+  fwrite(&mMean, sizeof(double), 1, file);
+  fwrite(mArr, sizeof(float), mCount, file);
+
+  fclose(file);
 }
 
 void Interarrivals::read_from_file(const char *fileName){
+
+  FILE *file = fopen(fileName, "rb");
+
+  if(file == 0){
+    printf("*** Interarrival::read_from_file('%s') : file == 0\n", fileName);
+    return;
+  }
+
+  size_t r;
+
+  int count;
+  double mean;
+  r = fread(&count, sizeof(int), 1, file);
+  r = fread(&mean, sizeof(double), 1, file);
+
+  float *arr = new float[count];
+  r = fread(arr, sizeof(double), count, file);
+
+  fclose(file);
+
+  mCount = count;
+  mMean = mean;
+  mArr = arr;
 
 }
 
@@ -750,23 +779,34 @@ int main(int argc, char *argv[]){
   run_all_tests();
 
 
-  // int bc = 2;
-  // int *ri = new int[bc];
-  // double *lambda = new double[bc];
-  // double *P = new double[bc*bc];
-  // ri[0] = 1;
-  // ri[1] = 2;
+
+  int bc = 2;
+  int *ri = new int[bc];
+  double *lambda = new double[bc];
+  double *P = new double[bc*bc];
+  ri[0] = 1;
+  ri[1] = 2;
+
+  lambda[0] = 1.5;
+  lambda[1] = 2.5;
+
+  P[0*bc+0] = 0.2;
+  P[0*bc+1] = 0.8;
+  P[1*bc+0] = 0.7;
+  P[1*bc+1] = 0.3;
+
+  ErChmm *erChmm = new ErChmm();
+  erChmm->set(bc, ri, lambda, P);
+
+  // Interarrivals *interarrivals = new Interarrivals();
+  // interarrivals->generate(erChmm, 20);
+  // interarrivals->print_out();
+  // interarrivals->write_to_file("sample-data.bin");
   //
-  // lambda[0] = 1.5;
-  // lambda[1] = 2.5;
-  //
-  // P[0*bc+0] = 0.2;
-  // P[0*bc+1] = 0.8;
-  // P[1*bc+0] = 0.7;
-  // P[1*bc+1] = 0.3;
-  //
-  // ErChmm *erChmm = new ErChmm();
-  // erChmm->set(bc, ri, lambda, P);
+  // Interarrivals *interarrivals2 = new Interarrivals();
+  // interarrivals2->read_from_file("sample-data.bin");
+  // interarrivals2->print_out();
+
   //
   // erChmm->print_out();
   // erChmm->write_to_file("params.erchmm");
