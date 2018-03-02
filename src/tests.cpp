@@ -333,6 +333,33 @@ bool test_erchmm_to_general_map(){
 
 }
 
+bool test_erchmm_generation(){
+  int bc = 3;
+  int *ri = new int[bc];
+  ri[0] = 1;
+  ri[1] = 3;
+  ri[2] = 2;
+
+  Structure *st = new Structure(bc, ri);
+
+  Random *rnd = new Random();
+  ErChmm *erChmm = new ErChmm();
+  double mean = 5;
+  erChmm->set(st, mean, rnd);
+
+  double erChmmMean = erChmm->obtainMean();
+
+  double absErr = abs(erChmmMean - mean);
+
+  if(absErr != 0.0) return false;
+
+  delete rnd;
+  delete erChmm;
+  delete st;
+
+  return true;
+}
+
 /* We will test each CUDA implementation with a small example.
 *  The results will be compared with ones obtained by a serial implementation.
 *
@@ -488,6 +515,7 @@ void run_all_tests(){
 
   printf("test_interarrival_generation ... %s\n", (test_interarrival_generation()?"PASSED":"FAILED"));
   printf("test_erchmm_to_general_map ... %s\n", (test_erchmm_to_general_map()?"PASSED":"FAILED"));
+  printf("test_erchmm_generation ... %s\n", (test_erchmm_generation()?"PASSED":"FAILED"));
 
   printf("test_em P_1 ... %s\n", (test_em(P_1)?"PASSED":"FAILED"));
   printf("test_em P_2 ... %s\n", (test_em(P_2)?"PASSED":"FAILED"));

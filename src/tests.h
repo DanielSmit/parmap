@@ -23,6 +23,8 @@ bool test_interarrival_generation();
 
 bool test_erchmm_to_general_map();
 
+bool test_erchmm_generation();
+
 
 bool test_em(int impl);
 

@@ -550,8 +550,18 @@ void ErChmm::set(Structure *st, double mean, Random *rnd){
 
   // computing stationary probabilities
   double *alpha = calculateStationaryProb(bc, P);
+  double erChmmMean = calculateMean(bc, ri, alpha, lambda);
 
 
+  // rescaling lambda
+  double factor = erChmmMean / mean;
+  for(int i = 0; i < bc; i++)
+    lambda[i] *= factor;
+
+  mBc = bc;
+  mLambda = lambda;
+  mRi = ri;
+  mP = P;
 
 }
 
