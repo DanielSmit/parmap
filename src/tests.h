@@ -16,6 +16,8 @@ bool test_stationary_prob_computation();
 
 bool test_stationary_prob_computation_for_general_map();
 
+bool test_erchmm_mean_computation();
+
 
 bool test_interarrival_generation();
 

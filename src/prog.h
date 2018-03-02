@@ -104,16 +104,23 @@ class ErChmm {
   public:
     ErChmm();
     void set(int bc, int *ri, double *lambda, double *P);
+    void set(Structure *st, double mean, Random *rnd);
 
     int getBc();
     int *getRi();
     double* getLambda();
     double* getP();
+    double obtainMean();
     double* obtainAlpha();
 
     void print_out();
     void write_to_file(const char *fileName);
     void read_from_file(const char *fileName);
+
+  private:
+    double calculateMean(int bc, int *ri, double *alpha, double *lambda);
+    double* calculateStationaryProb(int bc, double *P);
+
 
 };
 

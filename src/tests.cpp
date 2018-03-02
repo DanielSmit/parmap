@@ -199,6 +199,39 @@ bool test_stationary_prob_computation_for_general_map(){
   return true;
 }
 
+bool test_erchmm_mean_computation(){
+  int bc = 3;
+  int *ri = new int[bc];
+  double *lambda = new double[bc];
+  double *P = new double[bc*bc];
+  ri[0] = 1;
+  ri[1] = 2;
+  ri[2] = 3;
+
+  lambda[0] = 1.5;
+  lambda[1] = 2.5;
+  lambda[2] = 3.0;
+
+
+  P[0*bc+0] = 0.2; P[0*bc+1] = 0.3; P[0*bc+2] = 0.5;
+  P[1*bc+0] = 0.1; P[1*bc+1] = 0.8; P[1*bc+2] = 0.1;
+  P[2*bc+0] = 0.6; P[2*bc+1] = 0.2; P[2*bc+2] = 0.2;
+
+  ErChmm *erChmm = new ErChmm();
+  erChmm->set(bc, ri, lambda, P);
+
+  Map *map = new Map();
+  map->set(erChmm);
+
+  double erChmmMean = erChmm->obtainMean();
+  double mapMean = map->obtainMean();
+
+  double absErr = abs(mapMean - erChmmMean);
+  if(absErr != 1.11022302462515654042e-16) return false;
+
+  return true;
+}
+
 bool test_interarrival_generation(){
   int bc = 3;
   int *ri = new int[bc];
@@ -449,6 +482,9 @@ void run_all_tests(){
   printf("test_erchmm_structure_generation ... %s\n", (test_erchmm_structure_generation()?"PASSED":"FAILED"));
   printf("test_stationary_prob_computation ... %s\n", (test_stationary_prob_computation()?"PASSED":"FAILED"));
   printf("test_stationary_prob_computation_for_general_map ... %s\n", (test_stationary_prob_computation_for_general_map()?"PASSED":"FAILED"));
+  printf("test_erchmm_mean_computation ... %s\n", (test_erchmm_mean_computation()?"PASSED":"FAILED"));
+
+
 
   printf("test_interarrival_generation ... %s\n", (test_interarrival_generation()?"PASSED":"FAILED"));
   printf("test_erchmm_to_general_map ... %s\n", (test_erchmm_to_general_map()?"PASSED":"FAILED"));

@@ -526,6 +526,35 @@ void ErChmm::set(int bc, int *ri, double *lambda, double *P){
   }
 }
 
+void ErChmm::set(Structure *st, double mean, Random *rnd){
+  int bc = st->getBc();
+  int *ri = st->getRi();
+
+  // generating initial lambda sum_mat_value
+  double *lambda = new double[bc];
+  for(int i = 0; i < bc; i++)
+    lambda[i] = rnd->next();
+
+  // generating switching probabilities
+  double *P = new double[bc*bc];
+  for(int i = 0; i < bc; i++){
+    double sum = 0;
+    for(int j = 0; j < bc; j++){
+      double p = rnd->next();
+      P[i*bc+j] = p;
+      sum += p;
+    }
+    for(int j = 0; j < bc; j++)
+      P[i*bc+j] /= sum;
+  }
+
+  // computing stationary probabilities
+  double *alpha = calculateStationaryProb(bc, P);
+
+
+
+}
+
 int ErChmm::getBc(){
   return mBc;
 }
@@ -542,33 +571,15 @@ double* ErChmm::getP(){
   return mP;
 }
 
+double ErChmm::obtainMean(){
+  double *alpha = obtainAlpha();
+  double mean = calculateMean(mBc, mRi, alpha, mLambda);
+  delete [] alpha;
+  return mean;
+}
+
 double* ErChmm::obtainAlpha(){
-  int bc = mBc;
-  double *A = new double[bc*bc];
-  double *b = new double[bc];
-  double *x = new double[bc];
-
-  for(int i = 0; i < bc*bc; i++)
-    A[i] = mP[i];
-
-  transpose(bc, A);
-
-  for(int i = 0; i < bc; i++)
-    A[i*bc+i] -=1.0;
-
-  for(int i = 0; i < bc; i++)
-    A[0*bc+i] = 1;
-
-  for(int i = 0; i < bc; i++)
-    b[i] = 0;
-  b[0] = 1;
-
-  sole_gauss(bc, A, x, b);
-
-  delete [] A;
-  delete [] b;
-
-  return x;
+  return calculateStationaryProb(mBc, mP);
 }
 
 void ErChmm::print_out(){
@@ -668,6 +679,42 @@ void ErChmm::read_from_file(const char *fileName){
   delete [] ri;
   delete [] lambda;
   delete [] P;
+}
+
+double ErChmm::calculateMean(int bc, int *ri, double *alpha, double *lambda){
+  double mean = 0;
+  for(int i = 0; i < bc; i++)
+    mean += (alpha[i]*ri[i]) / lambda[i];
+  return mean;
+}
+
+double* ErChmm::calculateStationaryProb(int bc, double *P){
+
+  double *A = new double[bc*bc];
+  double *b = new double[bc];
+  double *x = new double[bc];
+
+  for(int i = 0; i < bc*bc; i++)
+    A[i] = P[i];
+
+  transpose(bc, A);
+
+  for(int i = 0; i < bc; i++)
+    A[i*bc+i] -= 1.0;
+
+  for(int i = 0; i < bc; i++)
+    A[0*bc+i] = 1;
+
+  for(int i = 0; i < bc; i++)
+    b[i] = 0;
+  b[0] = 1;
+
+  sole_gauss(bc, A, x, b);
+
+  delete [] A;
+  delete [] b;
+
+  return x;
 }
 
 //
