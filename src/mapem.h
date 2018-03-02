@@ -70,6 +70,13 @@ class ErChmmEm {
     void calc();
     void finish();
 
+    // memory usage in megabytes
+    double getCpuMemoryUsage();
+    double getGpuMemoryUsage();
+    double getMemoryUsage();
+
+
+
     float getLogLikelihood();
     float* getAlphaArr();
     float* getLambdaArr();
@@ -234,6 +241,11 @@ class ErChmmEmCuda  {
 
     void calc();
     void finish();
+
+    // memory usage in megabytes
+    double getCpuMemoryUsage();
+    double getGpuMemoryUsage();
+    double getMemoryUsage();
 
     float getLogLikelihood();
     float* getAlphaArr();

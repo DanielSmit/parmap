@@ -317,6 +317,19 @@ void ErChmmEm::finish(){
   delete [] mqVecCurr;
 }
 
+double ErChmmEm::getCpuMemoryUsage(){
+  int R = mBc;
+  int T = mTimeCount;
+  return (T*(3*R+3) + 2*R*R + 6*R + 4)*(4.0 / 1048576.0);
+}
+
+double ErChmmEm::getGpuMemoryUsage(){
+  return 0;
+}
+
+double ErChmmEm::getMemoryUsage(){
+  return getCpuMemoryUsage() + getGpuMemoryUsage();
+}
 
 
 

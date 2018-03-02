@@ -2579,6 +2579,47 @@ void ErChmmEmCuda::finish(){
   checkCudaErrors(cudaDeviceReset());
 }
 
+double ErChmmEmCuda::getCpuMemoryUsage(){
+  int R = mBc;
+  int T = mTimeCount;
+  int K = mParSize;
+  int L = (T + (K-T%K))/K;
+  if(mImpl == P_1)
+    return (T+L*(R*R*R*R + R*R*R + R*R + 2*R + 5) + 2*R*R + 8*R + 6)*(4.0 / 1048576.0);
+  if(mImpl == P_2)
+    return (T+L*(R*R*R + 2*R*R + 2*R + 5) + 2*R*R + 8*R + 6)*(4.0 / 1048576.0);
+  if(mImpl == P_2_D)
+    return (T+L*(R*R*R + 2*R*R + 2*R + 5) + 2*R*R + 8*R + 6)*(4.0 / 1048576.0);
+  if(mImpl == P_3)
+    return (T+L*(2*R*R + 3*R + 5) + 2*R*R + 8*R + 6)*(4.0 / 1048576.0);
+  if(mImpl == P_3_D)
+    return (T+L*(2*R*R + 3*R + 5) + 2*R*R + 8*R + 6)*(4.0 / 1048576.0);
+
+}
+
+double ErChmmEmCuda::getGpuMemoryUsage(){
+
+  int R = mBc;
+  int T = mTimeCount;
+  int K = mParSize;
+  int L = (T + (K-T%K))/K;
+
+  if(mImpl == P_1)
+    return (T+L*(R*R*R*R + R*R*R + R*R + 2*R + 5) + R*R + 5*R + 2)*(4.0 / 1048576.0);
+  if(mImpl == P_2)
+    return (T+L*(R*R*R + 2*R*R + 2*R + 5) + R*R + 5*R + 2)*(4.0 / 1048576.0);
+  if(mImpl == P_2_D)
+    return (T*(R+1)+L*(R*R*R + 2*R*R + 2*R + 5) + 2*R*R + 5*R + 2)*(4.0 / 1048576.0);
+  if(mImpl == P_3)
+    return (T*(2*R+3)+L*(2*R*R + 3*R + 5) + 2*R*R + 5*R + 2)*(4.0 / 1048576.0);
+  if(mImpl == P_3_D)
+    return (T*(3*R+3)+L*(2*R*R + 3*R + 5) + 2*R*R + 5*R + 2)*(4.0 / 1048576.0);
+}
+
+double ErChmmEmCuda::getMemoryUsage(){
+  return getCpuMemoryUsage() + getGpuMemoryUsage();
+}
+
 float ErChmmEmCuda::getLogLikelihood(){
   return mLogLikelihood;
 }
