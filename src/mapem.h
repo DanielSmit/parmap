@@ -5,6 +5,7 @@
 #include <cfloat>
 #include <cmath>
 
+#define SERIAL 0
 #define P_1 1
 #define P_2 2
 #define P_2_D 3

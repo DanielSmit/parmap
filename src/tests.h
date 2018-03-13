@@ -32,6 +32,6 @@ bool test_em(int impl);
 
 
 
-void run_all_tests();
+bool run_all_tests();
 
 #endif /* TESTS_HEADER */

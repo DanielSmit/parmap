@@ -436,6 +436,8 @@ bool test_em(int impl){
 
     em->finish();
 
+
+
     //printf("serial : impl-llh = %e\n", em->getImplLogLikelihood());
     //printf("serial :      llh = %e\n", em->getLogLikelihood());
 
@@ -464,6 +466,8 @@ bool test_em(int impl){
   emCuda->calc();
 
   emCuda->finish();
+
+
 
   //printf("   par : impl-llh = %e\n", emCuda->getImplLogLikelihood());
   //printf("   par :      llh = %e\n", emCuda->getLogLikelihood());
@@ -512,29 +516,60 @@ bool test_em(int impl){
 }
 
 
-void run_all_tests(){
+bool run_all_tests(){
   printf("\n");
+  printf("/ Testing code ... \n\n");
 
-  printf("test_sole_gauss ... %s\n", (test_sole_gauss()?"PASSED":"FAILED"));
-  printf("test_matrix_inverse ... %s\n", (test_matrix_inverse()?"PASSED":"FAILED"));
+  int failCount = 0; bool passed;
 
-  printf("test_erchmm_structure_generation ... %s\n", (test_erchmm_structure_generation()?"PASSED":"FAILED"));
-  printf("test_stationary_prob_computation ... %s\n", (test_stationary_prob_computation()?"PASSED":"FAILED"));
-  printf("test_stationary_prob_computation_for_general_map ... %s\n", (test_stationary_prob_computation_for_general_map()?"PASSED":"FAILED"));
-  printf("test_erchmm_mean_computation ... %s\n", (test_erchmm_mean_computation()?"PASSED":"FAILED"));
+  passed = test_sole_gauss(); if(!passed) failCount++;
+  printf("  test_sole_gauss ... %s\n", (passed?"PASSED":"FAILED"));
 
+  passed = test_matrix_inverse(); if(!passed) failCount++;
+  printf("  test_matrix_inverse ... %s\n", (passed?"PASSED":"FAILED"));
 
+  passed = test_erchmm_structure_generation(); if(!passed) failCount++;
+  printf("  test_erchmm_structure_generation ... %s\n", (passed?"PASSED":"FAILED"));
 
-  printf("test_interarrival_generation ... %s\n", (test_interarrival_generation()?"PASSED":"FAILED"));
-  printf("test_erchmm_to_general_map ... %s\n", (test_erchmm_to_general_map()?"PASSED":"FAILED"));
-  printf("test_erchmm_generation ... %s\n", (test_erchmm_generation()?"PASSED":"FAILED"));
+  passed = test_stationary_prob_computation(); if(!passed) failCount++;
+  printf("  test_stationary_prob_computation ... %s\n", (passed?"PASSED":"FAILED"));
 
-  printf("test_em P_1 ... %s\n", (test_em(P_1)?"PASSED":"FAILED"));
-  printf("test_em P_2 ... %s\n", (test_em(P_2)?"PASSED":"FAILED"));
-  printf("test_em P_2_D ... %s\n", (test_em(P_2_D)?"PASSED":"FAILED"));
-  printf("test_em P_3 ... %s\n", (test_em(P_3)?"PASSED":"FAILED"));
-  printf("test_em P_3_D ... %s\n", (test_em(P_3_D)?"PASSED":"FAILED"));
+  passed = test_stationary_prob_computation_for_general_map(); if(!passed) failCount++;
+  printf("  test_stationary_prob_computation_for_general_map ... %s\n", (passed?"PASSED":"FAILED"));
 
+  passed = test_erchmm_mean_computation(); if(!passed) failCount++;
+  printf("  test_erchmm_mean_computation ... %s\n", (passed?"PASSED":"FAILED"));
 
-  printf("\n");
+  passed = test_interarrival_generation(); if(!passed) failCount++;
+  printf("  test_interarrival_generation ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_erchmm_to_general_map(); if(!passed) failCount++;
+  printf("  test_erchmm_to_general_map ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_erchmm_generation(); if(!passed) failCount++;
+  printf("  test_erchmm_generation ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_em(P_1); if(!passed) failCount++;
+  printf("  test_em P_1 ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_em(P_2); if(!passed) failCount++;
+  printf("  test_em P_2 ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_em(P_2_D); if(!passed) failCount++;
+  printf("  test_em P_2_D ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_em(P_3); if(!passed) failCount++;
+  printf("  test_em P_3 ... %s\n", (passed?"PASSED":"FAILED"));
+
+  passed = test_em(P_3_D); if(!passed) failCount++;
+  printf("  test_em P_3_D ... %s\n", (passed?"PASSED":"FAILED"));
+
+  if(failCount == 0){
+    printf("\n/ All tests passed.\n\n");
+    return true;
+  }
+
+  printf("\n/ %d tests failed.\n\n", failCount);
+  return false;
+
 }
