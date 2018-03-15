@@ -69,6 +69,7 @@ void cmd_gen();
 void cmd_sim();
 void cmd_llh();
 void cmd_fit();
+void cmd_cnv();
 void cmd_res();
 
 //
@@ -121,6 +122,7 @@ class Map {
 
 
     void print_out();
+    void write_to_file(const char *fileName);
 
 };
 

@@ -488,715 +488,6 @@ vector<Structure*>* generate_all_structures(int n){
 }
 
 //
-// Client
-//
-
-void cmd_gen(){
-  printf("\n");
-  printf("/ ER-CHMM parameter generation /\n");
-  printf("\n");
-
-  char input[256];
-  char *tinput = NULL; // trimmed input
-
-  // ER-CHMM file name
-  char erchmmFileName[256] = "erchmm.txt";
-  printf("  Enter ER-CHMM file name ( %s ) : ", erchmmFileName);
-  read_line(input);
-
-
-  tinput = strtrm(input);
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-    strcpy(erchmmFileName, tinput);
-  }
-
-
-  // ER-CHMM structure
-  char stru[256]="1,2,3";
-
-  printf("  Enter number of states in each branch ( %s ) : ", stru);
-  read_line(input);
-
-  tinput = strtrm(input);
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-    strcpy(stru, tinput);
-
-  }
-
-  vector<int> *vecRi = new vector<int>();
-  char *token = strtok(stru, ",; ");
-
-  while(token != NULL){
-    int s = strtol(token, NULL, 10);
-    vecRi->push_back(s);
-    token = strtok(NULL, ",; ");
-  }
-
-  int bc = vecRi->size();
-  int *ri = new int[bc];
-
-  for(int i = 0; i < bc; i++){
-    ri[i] = (*vecRi)[i];
-  }
-  char structStr[256] = "";
-  int_arr_to_str(structStr, bc, ri);
-
-
-  Structure *structure = new Structure(bc, ri);
-
-  // mean
-  double mean = 1.0;
-  printf("  Enter mean ( %.1f ) : ", mean);
-  read_line(input);
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    double inputMean = strtod(tinput, NULL);
-    if(inputMean > 0) mean = inputMean;
-
-  }
-
-  // Generate
-  Random *rnd = new Random();
-
-  ErChmm *erChmm = new ErChmm();
-  erChmm->set(structure, mean, rnd);
-
-  erChmm->write_to_file(erchmmFileName);
-
-  printf("\n");
-  printf("  The generated ER-CHMM parameters are written to \'%s\' for .. \n", erchmmFileName);
-  printf("    structure : %s\n", structStr);
-  printf("    mean : %f\n", mean);
-  printf("\n");
-
-  delete rnd;
-  delete erChmm;
-  delete structure;
-
-}
-
-void cmd_sim(){
-  printf("\n");
-  printf("/ ER-CHMM simulation / \n");
-  printf("\n");
-
-  char input[256];
-  char *tinput;
-
-  // ER-CHMM parameter file
-  char erchmmFileName[256] = "erchmm.txt";
-  printf("  Enter ER-CHMM file ( %s ) : ", erchmmFileName);
-
-  read_line(input);
-  tinput = strtrm(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    strcpy(erchmmFileName, tinput);
-
-  }
-
-  // output file
-  char outputFileName[256]="interarrivals.bin";
-  printf("  Enter file for saving interarrivals into ( %s ) : ", outputFileName);
-  read_line(input);
-  tinput = strtrm(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    strcpy(erchmmFileName, tinput);
-  }
-
-  // number of interarrivals
-
-  int count = 100000;
-
-  printf("  Enter number of interarrivals ( %d ) : ", count);
-  read_line(input);
-  tinput = strtrm(input);
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    int countInput = strtol(tinput, NULL, 10);
-    if(countInput > 1) count = countInput;
-  }
-
-  //
-  ErChmm *erChmm = new ErChmm();
-  erChmm->read_from_file(erchmmFileName);
-
-  Interarrivals *interarrivals = new Interarrivals();
-  interarrivals->generate(erChmm, count);
-  interarrivals->write_to_file(outputFileName);
-
-  printf("\n");
-  printf("  The generated interarrivals (mean : %f) are written to \'%s\' for .. \n", interarrivals->getMean(), outputFileName);
-  printf("    ER-CHMM parameter file : %s\n", erchmmFileName);
-  printf("    count : %d\n", count);
-  printf("\n");
-
-  delete  interarrivals;
-  delete erChmm;
-
-}
-
-void cmd_llh(){
-  printf("\n");
-  printf("/ ER-CHMM log-likehooh computation / \n");
-  printf("\n");
-
-  char input[256];
-  char *tinput;
-
-  // ER-CHMM parameter file
-  char erchmmFileName[256] = "erchmm.txt";
-  printf("  Enter ER-CHMM file ( %s ) : ", erchmmFileName);
-
-  read_line(input);
-  tinput = strtrm(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    strcpy(erchmmFileName, tinput);
-  }
-
-  // interarrivals file
-  char interarrivalsFileName[256] = "interarrivals.bin";
-  printf("  Enter interarrivals file ( %s ) : ", interarrivalsFileName);
-
-  read_line(input);
-  tinput = strtrm(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    strcpy(interarrivalsFileName, tinput);
-  }
-
-  // compute
-  ErChmm *erChmm = new ErChmm();
-  erChmm->read_from_file(erchmmFileName);
-
-  Interarrivals *interarrivals = new Interarrivals();
-  interarrivals->read_from_file(interarrivalsFileName);
-  printf("  Number of interarrivals : %d\n", interarrivals->getCount());
-  double llh = erChmm->obtainLogLikelihood(interarrivals);
-
-  printf("\n");
-  printf("  Log-likelihood : %.7e\n", llh);
-  printf("\n");
-
-
-  delete erChmm;
-  delete interarrivals;
-
-
-}
-
-void cmd_fit(){
-  printf("\n");
-  printf("/ Fitting / \n");
-  printf("\n");
-
-  char input[256]="";
-  char *tinput;
-  int minBc, maxBc;
-
-  // interarrivals file
-  char interarrivalsFileName[256] = "interarrivals.bin";
-  printf("  Enter interarrivals file ( %s ) : ", interarrivalsFileName);
-
-  read_line(input);
-  tinput = strtrm(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    strcpy(interarrivalsFileName, tinput);
-  }
-  Interarrivals *interarrivals = new Interarrivals();
-  interarrivals->read_from_file(interarrivalsFileName);
-
-  printf("  Number of interarrivals : %d\n", interarrivals->getCount());
-  printf("\n");
-
-
-  vector<ErChmm *> *erChmmVec = new vector<ErChmm*>();
-
-  // from file or randomly generated ?
-  char optionParams[16]="ff";
-  printf("  Initial ER-CHMM parameters : \n");
-  printf("    ff - from file\n");
-  printf("    rg - randomly generated \n");
-  printf("  Enter your choice ( %s ) : ", optionParams);
-  read_line(input);
-  printf("\n");
-  tinput = strtrm(input);
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-    if(strcmp(tinput, "rg") == 0) strcpy(optionParams, "rg");
-    if(strcmp(tinput, "ff") == 0) strcpy(optionParams, "ff");
-
-  }
-
-  if(strcmp(optionParams, "ff") == 0){
-
-    // ER-CHMM parameter file
-    char erchmmFileName[256] = "erchmm.txt";
-    printf("  Enter ER-CHMM file ( %s ) : ", erchmmFileName);
-
-    read_line(input);
-    tinput = strtrm(input);
-
-    if(strlen(tinput) > 0) {
-      if(strcmp(tinput, "q") == 0){
-        printf("\n");
-        return;
-      }
-
-      strcpy(erchmmFileName, tinput);
-    }
-
-    ErChmm *erChmm = new ErChmm();
-    erChmm->read_from_file(erchmmFileName);
-
-    erChmmVec->push_back(erChmm);
-  }else if(strcmp(optionParams, "rg") == 0){
-
-    strcpy(optionParams, "st");
-    printf("  Randomly generated ER-CHMM parameters : \n");
-    printf("    st - for given structure \n");
-    printf("    ss - for given number of states (multiple structures) \n");
-    printf("  Enter your choice ( %s ) : ", optionParams);
-    read_line(input);
-    printf("\n");
-    tinput = strtrm(input);
-
-    if(strlen(tinput) > 0) {
-      if(strcmp(tinput, "q") == 0){
-        printf("\n");
-        return;
-      }
-      if(strcmp(tinput, "st") == 0) strcpy(optionParams, "st");
-      if(strcmp(tinput, "ss") == 0) strcpy(optionParams, "ss");
-    }
-
-    // random ER-CHMM parameters for given structure
-    if(strcmp(optionParams, "st") == 0){
-      // ER-CHMM structure
-      char stru[256]="1,2,3";
-
-      printf("  Enter number of states in each branch ( %s ) : ", stru);
-      read_line(input);
-
-      tinput = strtrm(input);
-      if(strlen(tinput) > 0) {
-        if(strcmp(tinput, "q") == 0){
-          printf("\n");
-          return;
-        }
-        strcpy(stru, tinput);
-
-      }
-
-      vector<int> *vecRi = new vector<int>();
-      char *token = strtok(stru, ",; ");
-
-      while(token != NULL){
-        int s = strtol(token, NULL, 10);
-        vecRi->push_back(s);
-        token = strtok(NULL, ",; ");
-      }
-
-      int bc = vecRi->size();
-      int *ri = new int[bc];
-
-      for(int i = 0; i < bc; i++){
-        ri[i] = (*vecRi)[i];
-      }
-
-      Structure *structure = new Structure(bc, ri);
-
-      Random *rnd = new Random();
-      ErChmm *erChmm = new ErChmm();
-      erChmm->set(structure, interarrivals->getMean(), rnd);
-      erChmmVec->push_back(erChmm);
-
-      delete rnd;
-    } else if(strcmp(optionParams, "ss") == 0) {
-
-      // number of states
-      int numOfStates = 5;
-      printf("  Enter number of states ( %d ) : ", numOfStates);
-      read_line(input);
-      tinput = strtrm(input);
-
-      if(strlen(tinput) > 0) {
-        if(strcmp(tinput, "q") == 0){
-          printf("\n");
-          return;
-        }
-        int numOfStatesInput = strtol(tinput, NULL, 10);
-        if(numOfStatesInput > 1) numOfStates = numOfStatesInput;
-
-      }
-
-      // number of branches
-      minBc = 2;
-      maxBc = numOfStates;
-      printf("  Enter min number of branches ( %d ) : ", minBc);
-      read_line(input);
-      tinput = strtrm(input);
-
-      if(strlen(tinput) > 0) {
-        if(strcmp(tinput, "q") == 0){
-          printf("\n");
-          return;
-        }
-        int minBcInput = strtol(tinput, NULL, 10);
-        if(minBcInput > 1 && minBcInput <= numOfStates) minBc = minBcInput;
-      }
-
-      printf("  Enter max number of branches ( %d ) : ", maxBc);
-      read_line(input);
-      tinput = strtrm(input);
-
-      if(strlen(tinput) > 0) {
-        if(strcmp(tinput, "q") == 0){
-          printf("\n");
-          return;
-        }
-        int maxBcInput = strtol(tinput, NULL, 10);
-        if(maxBcInput >= minBc && maxBcInput <= numOfStates) maxBc = maxBcInput;
-      }
-
-      vector<Structure*> *allStructures = generate_all_structures(numOfStates);
-      vector<Structure*> *selStructures = new vector<Structure*>();
-
-      for(int i = 0; i < allStructures->size(); i++){
-        Structure *st = (*allStructures)[i];
-        if(st->getBc()>= minBc && st->getBc() <= maxBc)
-          selStructures->push_back(st);
-      }
-
-      Random *rnd = new Random();
-      for(int i = 0; i < selStructures->size(); i++){
-        Structure *st = (*selStructures)[i];
-        ErChmm *erChmm = new ErChmm();
-        erChmm->set(st, interarrivals->getMean(), rnd);
-        erChmmVec->push_back(erChmm);
-      }
-
-      printf("  Number of generated structures : %d\n", (int)selStructures->size());
-      char structStr[256]="";
-      for(int i = 0; i < selStructures->size(); i++){
-        Structure *st = (*selStructures)[i];
-        st->str(structStr);
-        printf("    [ %d ] : %s\n", (i+1), structStr);
-      }
-
-
-
-
-    }
-
-
-  }
-
-
-  // number of iterations
-  int iterationCount = 100;
-  printf("  Enter number of iterations ( %d ) : ", iterationCount);
-  read_line(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-    int iterationCountInput = strtol(tinput, NULL, 10);
-    if(iterationCountInput >= 1) iterationCount = iterationCountInput;
-  }
-
-  // number of partitions
-  int partitionCount = 7680;
-  printf("  Enter number of partitions ( %d ) : ", partitionCount);
-  read_line(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-    int partitionCountInput = strtol(tinput, NULL, 10);
-    if(partitionCountInput >= 1) partitionCount = partitionCountInput;
-  }
-
-  // the algorithm implementations
-  char implOptions[256]="ser,p3d";
-  printf("  Enter EM algorithm implementations, available : \n");
-  printf("    ser - serial implementation\n");
-  printf("    p1 - parallel implementation with one pass\n");
-  printf("    p2, p2d - parallel implementation with two passes\n");
-  printf("    p3, p3d - parallel implementation with three passes\n");
-  printf("  Enter your choice ( %s ) : ", implOptions);
-  read_line(input);
-  printf("\n");
-  tinput = strtrm(input);
-
-  if(strlen(tinput) > 0) {
-    if(strcmp(tinput, "q") == 0){
-      printf("\n");
-      return;
-    }
-
-    strcpy(implOptions, tinput);
-  }
-
-  vector<int> *implVec = new vector<int>();
-
-  char *token = strtok(implOptions, ",; ");
-
-  while(token != NULL){
-    implVec->push_back(impl_id(token));
-    token = strtok(NULL, ",; ");
-  }
-
-
-
-  //
-  printf("\n/ Fitting has been started. / \n\n");
-
-  char infoFileName[64]="info.txt";
-  char llhFileName[64]="llh.txt";
-  char summaryFileName[64]="summary.txt";
-
-  char initialErChmmFolderName[256] = "initial-erchmm";
-  char resultErChmmFolderName[256] = "result-erchmm";
-
-  // creating folders
-  char syscmd[128]="";
-  sprintf(syscmd, "mkdir -p %s", initialErChmmFolderName);
-  int dir_err = system(syscmd);
-
-  sprintf(syscmd, "mkdir -p %s", resultErChmmFolderName);
-  dir_err = system(syscmd);
-
-
-  FILE *infoFile = fopen(infoFileName, "w");
-  fprintf(infoFile, "tag; L; R; impl; struct; llh; mean; runtime; cpu mem; gpu mem; total mem\n");
-
-
-  // char structStr[128] = "";
-  // int_arr_to_str(structStr, initialErChmm->getBc(), initialErChmm->getRi());
-  //
-  //
-  // fprintf(infoFile, "initial-erchmm; - ; %d; - ; %s; %e; %e; - ; - ; - ; -\n",
-  //   initialErChmm->getBc(),
-  //   structStr,
-  //   initialErChmm->obtainLogLikelihood(interarrivals),
-  //   initialErChmm->obtainMean());
-  // fprintf(infoFile, "sample; - ; - ; - ; - ; - ; %e; - ; - ; - ; - \n", interarrivals->getMean() );
-
-  fclose(infoFile);
-
-
-
-
-  vector<FittingOutput*> *fos = new vector<FittingOutput*>();
-
-char path[128]="";
-  for(int i = 0; i < erChmmVec->size(); i++){
-
-
-    ErChmm *initialErChmm = (*erChmmVec)[i];
-    for(int impl_i = 0; impl_i < implVec->size(); impl_i++){
-      int impl = (*implVec)[impl_i];
-
-
-      Structure *st = new Structure(initialErChmm->getBc(), initialErChmm->getRi());
-      FittingOutput *fo = runFitting(impl, partitionCount, initialErChmm, st, interarrivals);
-
-
-      fos->push_back(fo);
-
-      fo->append_to_file(infoFileName);
-
-
-      sprintf(path, "%s%c%s.txt", initialErChmmFolderName, kPathSeparator, fo->tag());
-      fo->initialErChmm()->write_to_file(path);
-
-      sprintf(path, "%s%c%s.txt", resultErChmmFolderName, kPathSeparator, fo->tag());
-      fo->resultErChmm()->write_to_file(path);
-
-
-
-    }
-  }
-
-
-  std::sort(fos->begin(), fos->end(),
-  []( FittingOutput* lhs,  FittingOutput* rhs)
-  {
-      return lhs->getLlh() > rhs->getLlh();
-  });
-
-  FILE *file = fopen(llhFileName, "w");
-  fprintf(file, "tag; llh\n");
-  for(int i = 0; i < fos->size(); i++){
-    FittingOutput *fo = (*fos)[i];
-    fprintf(file, "%s; %.16e\n", fo->tag(), fo->getLlh());
-
-  }
-
-  fclose(file);
-
-
-  // summary
-  minBc = maxBc = (*fos)[0]->getBc();
-  for(int i = 1; i < fos->size(); i++){
-    int bc = (*fos)[i]->getBc();
-    if(bc < minBc) minBc = bc;
-    if(bc > maxBc) maxBc = bc;
-  }
-
-  int implCount = implVec->size();
-  int bcc = maxBc - minBc + 1;
-  int caseCount = implCount*bcc;
-
-
-
-  int *strCountArr = new int[caseCount];
-  double *rtArr = new double[caseCount];
-  double *gpuMemArr = new double[caseCount];
-  double *cpuMemArr = new double[caseCount];
-
-  for(int i = 0; i < caseCount; i++){
-    strCountArr[i] = 0;
-    rtArr[i] = 0;
-    gpuMemArr[i] = 0;
-    cpuMemArr[i] = 0;
-  }
-
-  for(int i = 0; i < fos->size(); i++){
-    FittingOutput *fo = (*fos)[i];
-    int bc_idx = fo->initialErChmm()->getBc() - minBc;
-    int impl_idx = -1;
-    for(int impl_i = 0; impl_i < implVec->size(); impl_i++){
-      if( (*implVec)[impl_i] == fo->getImpl())
-        impl_idx = impl_i;
-    }
-    int idx = impl_idx * bcc + bc_idx;
-
-    strCountArr[idx]++;
-    rtArr[idx] += fo->getRuntime();
-    gpuMemArr[idx] += fo->getGpuMem();
-    cpuMemArr[idx] += fo->getCpuMem();
-  }
-
-  for(int i = 0; i < caseCount; i++){
-    rtArr[i] /= (double)strCountArr[i];
-    gpuMemArr[i] /= (double)strCountArr[i];
-    cpuMemArr[i] /= (double)strCountArr[i];
-
-  }
-
-  file = fopen(summaryFileName, "w");
-
-    int L;
-    char implStr[6]="";
-    for(int impl_i = 0; impl_i < implVec->size(); impl_i++){
-      int impl = (*implVec)[impl_i];
-      if(impl == SERIAL)
-        L = 1;
-      else
-        L = partitionCount;
-
-      impl_str(implStr, impl);
-
-      fprintf(file, "L = %d, %s\n", L, implStr);
-      fprintf(file, "-----------------------------\n");
-      fprintf(file, "R; runtime (seconds); total mem; cpu mem; gpu mem\n");
-      for(int i = 0; i < bcc; i++){
-        int bc = i + minBc;
-        int idx = impl_i*bcc + i;
-        fprintf(file, "%d; %.3f; %.3f; %.3f; %.3f\n", bc, rtArr[idx], (cpuMemArr[idx]+gpuMemArr[idx]), cpuMemArr[idx], gpuMemArr[idx]);
-      }
-      fprintf(file, "\n");
-
-    }
-
-    fclose(file);
-
-
-
-
-  printf("\n/ Fitting is done. / \n\n");
-
-  printf("  Results written: \n");
-  printf("    %s%c - initial ER-CHMM parameters,\n", initialErChmmFolderName, kPathSeparator);
-  printf("    %s%c - result ER-CHMM parameters,\n", resultErChmmFolderName, kPathSeparator);
-  printf("    %s - all information about fitting,\n", infoFileName);
-  printf("    %s - summary of runtimes and memory usage,\n", summaryFileName);
-  printf("    %s - log-likelihood values, in descending order.\n", llhFileName);
-  printf("\n");
-
-
-
-
-
-}
-
-void cmd_res(){
-
-  printf("\n");
-  printf("/ Research computations for paper. / \n");
-  printf("\n");
-  printf("  ! The research can be interrupted (by closing application). The next time it will be launched it will resume the computations.\n\n");
-
-  Research *research = new Research();
-  research->run();
-  delete research;
-
-}
-
-//
 // Map
 //
 void Map::set(ErChmm *erChmm){
@@ -1321,6 +612,31 @@ void Map::print_out(){
   mat_print_out(mSize, mD1);
   printf("\n");
 }
+
+
+void Map::write_to_file(const char *fileName){
+  FILE *file = fopen(fileName, "w");
+
+  fprintf(file, "# number of states\n");
+  fprintf(file, "%d\n", mSize);
+
+  fprintf(file, "# matrix D0 \n");
+  for(int i = 0; i < mSize; i++){
+    for(int j = 0; j < mSize-1; j++)
+      fprintf(file, "%.16f, ", mD0[i*mSize+j]);
+    fprintf(file, "%.16f\n", mD0[i*mSize+mSize-1]);
+  }
+
+  fprintf(file, "# matrix D1 \n");
+  for(int i = 0; i < mSize; i++){
+    for(int j = 0; j < mSize-1; j++)
+      fprintf(file, "%.16f, ", mD1[i*mSize+j]);
+    fprintf(file, "%.16f\n", mD1[i*mSize+mSize-1]);
+  }
+
+  fclose(file);
+}
+
 
 //
 // ErChmm
@@ -2658,6 +1974,879 @@ FittingOutput* runParFitting(int impl, int L, ErChmm *erChmm, Structure *st, Int
   return fo;
 }
 
+
+//
+// Command line interface
+//
+
+void acquire_string(const char *promptStr, const char *defaultStr, char *output){
+  printf("%s ( %s ) : ", promptStr, defaultStr);
+  char input[256]="";
+
+  read_line(input);
+  char *tinput = strtrm(input);
+
+  if(strlen(tinput) > 0)
+    strcpy(output, tinput);
+  else
+    strcpy(output, defaultStr);
+
+}
+
+void acquire_file_name(const char *promptStr, const char *defaultStr, char *output){
+  bool acquired;
+  char input[256]="";
+  char *tinput;
+  do{
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+
+
+    read_line(input);
+    char *tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(output, tinput);
+    else
+      strcpy(output, defaultStr);
+
+    FILE *file =fopen(output,"r");
+    if(file == NULL){
+      printf("  *** file \'%s\' do not exist!\n", output);
+      printf("\n");
+      acquired = false;
+    }else{
+      fclose(file);
+    }
+  }while(acquired == false);
+}
+
+Structure* acquire_structure(const char *promptStr, const char *defaultStr){
+  char input[256]="";
+  char structStr[256]="";
+
+  char *tinput = NULL;
+  bool acquired = false;
+  Structure *structure = NULL;
+
+  do{
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+
+    read_line(input);
+    tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(structStr, tinput);
+    else
+      strcpy(structStr, defaultStr);
+
+    vector<int> *vecRi = new vector<int>();
+    char *token = strtok(structStr, ",; ");
+    while(token != NULL){
+      int s = strtol(token, NULL, 10);
+
+      if(s == 0){
+        printf("  *** parse error : \'%s\' is not a valid number of states!\n", token);
+        printf("\n");
+        acquired = false;
+        break;
+      }
+      vecRi->push_back(s);
+      token = strtok(NULL, ",; ");
+    }
+
+    int bc = vecRi->size();
+    int *ri = new int[bc];
+
+    for(int i = 0; i < bc; i++)
+      ri[i] = (*vecRi)[i];
+
+    structure = new Structure(bc, ri);
+
+
+  }while(acquired == false);
+
+  return structure;
+}
+
+int acquire_int(const char *promptStr, const char *defaultStr){
+  bool acquired = true;
+  int value = 0;
+  do{
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+    char input[256]="";
+    char str[256]="";
+
+    read_line(input);
+    char *tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(str, tinput);
+    else
+      strcpy(str, defaultStr);
+
+    value = strtol(str, NULL, 10);
+    if(value == 0 ){
+      printf(" *** parse error : \'%s\' is not a valid integer!\n", str);
+      printf("\n");
+      acquired = false;
+    }
+    if(value < 0){
+      printf(" *** value has to be > 0!\n");
+      printf("\n");
+      acquired = false;
+    }
+
+  }while(acquired == false);
+
+  return value;
+}
+
+void acquire_int_range(const char *promptStr, const char *defaultStr, int min, int max, int &outMin, int &outMax){
+  bool acquired = true;
+
+  char input[256]="";
+  char str[256]="";
+
+  do{
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+
+
+    read_line(input);
+    char *tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(str, tinput);
+    else
+      strcpy(str, defaultStr);
+
+    char *tokenA = strtok(str, ",; ");
+    char *tokenB = strtok(NULL, ",; ");
+
+    if(tokenA == NULL || tokenB == NULL){
+      printf("  *** please, enter two integers separated by comma!\n");
+      printf("\n");
+      acquired = false;
+      continue;
+    }
+
+    int valA = strtol(tokenA, NULL, 10);
+    int valB = strtol(tokenB, NULL, 10);
+
+    if(valA == 0){
+      printf("  *** failed to parse \'%s\'!\n", tokenA);
+      printf("\n");
+      acquired = false;
+      continue;
+    }
+
+    if(valB == 0){
+      printf("  *** failed to parse \'%s\'!\n", tokenB);
+      printf("\n");
+      acquired = false;
+      continue;
+    }
+
+    if(valA > valB){
+      printf("  *** you have entered an invalid range!\n");
+      printf("\n");
+      acquired = false;
+      continue;
+    }
+
+    if(valA < min || valA > max || valB < min || valB > max){
+      printf("  *** enter a valid range from [ %d, %d ]!\n", min, max);
+      printf("\n");
+      acquired = false;
+      continue;
+    }
+
+    outMin = valA;
+    outMax = valB;
+
+  }while(acquired == false);
+
+}
+
+double acquire_double(const char *promptStr, const char *defaultStr){
+  bool acquired = true;
+  double value = 0;
+  do{
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+    char input[256]="";
+    char str[256]="";
+
+    read_line(input);
+    char *tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(str, tinput);
+    else
+      strcpy(str, defaultStr);
+
+    value = strtod(str, NULL);
+    if(value == 0.0){
+      printf(" *** parse error : \'%s\' is not a valid number!\n", str);
+      printf("\n");
+      acquired = false;
+    }
+
+    if(value < 0.0){
+      printf(" *** value has to be > 0!\n");
+      printf("\n");
+      acquired = false;
+    }
+
+  }while(acquired == false);
+
+  return value;
+}
+
+void acquire_option(const char *promptStr, const char *defaultStr, vector<char*> *options, char *output){
+
+  bool acquired = true;
+  char input[256]="";
+  char str[256]="";
+
+  do{
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+
+
+    read_line(input);
+    char *tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(str, tinput);
+    else
+      strcpy(str, defaultStr);
+
+    // check if this @str option is valid
+    bool found = false;
+    for(int i = 0; i < options->size(); i++){
+      char* opt = (*options)[i];
+      if(strcmp(opt, str) == 0){
+        found = true;
+        break;
+      }
+    }
+
+    if(found == false){
+      printf("  *** \'%s\' is not a valid option!\n", str);
+      printf("\n");
+      acquired = false;
+    }else{
+      strcpy(output, str);
+    }
+
+  }while(acquired == false);
+
+}
+
+struct Option {
+  char *opt;
+  int id;
+  Option(char *opt, int id){
+    this->opt = opt;
+    this->id = id;
+  }
+};
+
+vector<int>* acquire_options(const char *promptStr, const char *defaultStr, vector<Option*> *options){
+
+  vector<int> *output = new vector<int>();
+
+  bool acquired = true;
+  char input[256]="";
+  char str[256]="";
+
+  do{
+    output->clear();
+
+    acquired = true;
+    printf("%s ( %s ) : ", promptStr, defaultStr);
+
+
+    read_line(input);
+    char *tinput = strtrm(input);
+
+    if(strlen(tinput) > 0)
+      strcpy(str, tinput);
+    else
+      strcpy(str, defaultStr);
+
+
+    char *token = strtok(str, ",; ");
+    while(token != NULL){
+      // check if this @str option is valid
+      int id = -1;
+      for(int i = 0; i < options->size(); i++){
+        char* opt = (*options)[i]->opt;
+        if(strcmp(opt, str) == 0){
+          id = (*options)[i]->id;
+          break;
+        }
+      }
+      if(id == -1){
+        printf("  *** \'%s\' is not a valid option!\n", token);
+        printf("\n");
+        acquired = false;
+        break;
+      }
+
+      output->push_back(id);
+      token = strtok(NULL, ",; ");
+    }
+
+
+
+
+
+  }while(acquired == false);
+
+  return output;
+}
+
+
+
+void cmd_gen(){
+  printf("\n");
+  printf("/ ER-CHMM parameter generation /\n");
+  printf("\n");
+
+  char input[256];
+  char *tinput = NULL; // trimmed input
+
+  // ER-CHMM file name
+  char erchmmFileName[256] = "";
+  acquire_string("Enter ER-CHMM file name", "erchmm.txt", erchmmFileName);
+  printf("  >> file name : \'%s\'\n", erchmmFileName);
+  printf("\n");
+
+
+  // ER-CHMM structure
+  Structure *structure = acquire_structure("Enter number of states in each branch", "1, 2, 3");
+  char structStr[256]="";
+  structure->str(structStr);
+  printf("  >> structure : %s\n", structStr);
+  printf("\n");
+
+  // mean
+  double mean = acquire_double("Enter sample mean", "1.0");
+  printf("  >> sample mean : %f\n", mean);
+  printf("\n");
+
+  // Generate
+  Random *rnd = new Random();
+
+  ErChmm *erChmm = new ErChmm();
+  erChmm->set(structure, mean, rnd);
+
+  erChmm->write_to_file(erchmmFileName);
+
+  printf("The generated ER-CHMM parameters are written to \'%s\' for .. \n", erchmmFileName);
+  printf("\n");
+
+  delete rnd;
+  delete erChmm;
+  delete structure;
+
+}
+
+void cmd_sim(){
+  printf("\n");
+  printf("/ ER-CHMM simulation / \n");
+  printf("\n");
+
+  char input[256];
+  char *tinput;
+
+
+  // ER-CHMM file name
+  char erchmmFileName[256] = "";
+  acquire_file_name("Enter ER-CHMM file name", "erchmm.txt", erchmmFileName);
+  printf("  >> file name : \'%s\'\n", erchmmFileName);
+  printf("\n");
+
+  // output file
+  char outputFileName[256]="interarrivals.bin";
+  acquire_string("Enter file for saving interarrivals into", "interarrivals.bin", outputFileName);
+  printf("  >> file name : \'%s\'\n", outputFileName);
+  printf("\n");
+
+  // number of interarrivals
+
+  int count = acquire_int("Enter number of interarrivals", "100000");
+  printf("  >> number of interarrivals : %d\n", count);
+  printf("\n");
+
+  //
+  ErChmm *erChmm = new ErChmm();
+  erChmm->read_from_file(erchmmFileName);
+
+  Interarrivals *interarrivals = new Interarrivals();
+  interarrivals->generate(erChmm, count);
+  interarrivals->write_to_file(outputFileName);
+
+  printf("  The generated interarrivals (mean : %f) are written to \'%s\' for .. \n", interarrivals->getMean(), outputFileName);
+  printf("\n");
+
+  delete  interarrivals;
+  delete erChmm;
+
+}
+
+void cmd_llh(){
+  printf("\n");
+  printf("/ ER-CHMM log-likehooh computation / \n");
+  printf("\n");
+
+  char input[256];
+  char *tinput;
+
+  // ER-CHMM parameter file
+  char erchmmFileName[256] = "";
+  acquire_file_name("Enter ER-CHMM file", "erchmm.txt", erchmmFileName);
+  printf("  >> file name \'%s\'\n", erchmmFileName);
+  printf("\n");
+
+  // interarrivals file
+  char interarrivalsFileName[256] = "interarrivals.bin";
+  acquire_file_name("Enter interarrivals file", "interarrivals.bin", interarrivalsFileName);
+  printf("  >> file name : \'%s\'\n", interarrivalsFileName);
+  printf("\n");
+
+  // compute
+  ErChmm *erChmm = new ErChmm();
+  erChmm->read_from_file(erchmmFileName);
+
+  Interarrivals *interarrivals = new Interarrivals();
+  interarrivals->read_from_file(interarrivalsFileName);
+  printf("Number of interarrivals : %d\n", interarrivals->getCount());
+  double llh = erChmm->obtainLogLikelihood(interarrivals);
+
+  printf("\n");
+  printf("Log-likelihood : %.7e\n", llh);
+  printf("\n");
+
+
+  delete erChmm;
+  delete interarrivals;
+
+
+}
+
+void cmd_fit(){
+  printf("\n");
+  printf("/ Fitting / \n");
+  printf("\n");
+
+  char input[256]="";
+  char *tinput;
+  int minBc, maxBc;
+
+  // interarrivals file
+  char interarrivalsFileName[256] = "interarrivals.bin";
+  acquire_file_name("Enter interarrivals file", "interarrivals.bin", interarrivalsFileName);
+  printf("  >> file name : \'%s\'\n", interarrivalsFileName);
+  printf("\n");
+
+  Interarrivals *interarrivals = new Interarrivals();
+  interarrivals->read_from_file(interarrivalsFileName);
+
+  printf("Number of interarrivals : %d\n", interarrivals->getCount());
+  printf("\n");
+
+
+  vector<ErChmm *> *erChmmVec = new vector<ErChmm*>();
+
+  // from file or randomly generated ?
+  char optionParams[16]="ff";
+  printf("Initial ER-CHMM parameters : \n");
+  printf("  ff - from file\n");
+  printf("  rg - randomly generated \n");
+
+  vector<char*> *options = new vector<char*>();
+  options->push_back("ff");
+  options->push_back("rg");
+
+  acquire_option("Enter your choice", "ff", options, optionParams);
+  printf("  >> option : %s\n", optionParams);
+  printf("\n");
+  delete options;
+
+
+  if(strcmp(optionParams, "ff") == 0){
+
+    // ER-CHMM parameter file
+    char erchmmFileName[256] = "";
+    acquire_file_name("Enter ER-CHMM file", "erchmm.txt", erchmmFileName);
+    printf("  >> file name \'%s\'\n", erchmmFileName);
+    printf("\n");
+
+    ErChmm *erChmm = new ErChmm();
+    erChmm->read_from_file(erchmmFileName);
+
+    erChmmVec->push_back(erChmm);
+  }else if(strcmp(optionParams, "rg") == 0){
+
+    strcpy(optionParams, "st");
+    printf("Randomly generated ER-CHMM parameters : \n");
+    printf("  st - for given structure \n");
+    printf("  ss - for given number of states (multiple structures) \n");
+
+    vector<char*> *options = new vector<char*>();
+    options->push_back("st");
+    options->push_back("ss");
+
+    acquire_option("Enter your choice", "st", options, optionParams);
+    printf("  >> option : %s\n", optionParams);
+    printf("\n");
+    delete options;
+
+    // random ER-CHMM parameters for given structure
+    if(strcmp(optionParams, "st") == 0){
+
+      // ER-CHMM structure
+      Structure *structure = acquire_structure("Enter number of states in each branch", "1, 2, 3");
+      char structStr[256]="";
+      structure->str(structStr);
+      printf("  >> structure : %s\n", structStr);
+      printf("\n");
+
+      Random *rnd = new Random();
+      ErChmm *erChmm = new ErChmm();
+      erChmm->set(structure, interarrivals->getMean(), rnd);
+      erChmmVec->push_back(erChmm);
+
+      delete rnd;
+    } else if(strcmp(optionParams, "ss") == 0) {
+
+      // number of states
+      int numOfStates = acquire_int("Enter number of states", "5");
+      printf("  >> number of states : %d\n", numOfStates);
+      printf("\n");
+
+      // number of branches
+
+
+
+      minBc = 2;
+      maxBc = numOfStates;
+      char tmp[256]="";
+      sprintf(tmp, "%d, %d", 2, numOfStates);
+      acquire_int_range("Enter range for number of branches, R", tmp, 2, numOfStates, minBc, maxBc);
+      printf("  >> range : [ %d, %d ]\n", minBc, maxBc);
+      printf("\n");
+
+      vector<Structure*> *allStructures = generate_all_structures(numOfStates);
+      vector<Structure*> *selStructures = new vector<Structure*>();
+
+      for(int i = 0; i < allStructures->size(); i++){
+        Structure *st = (*allStructures)[i];
+        if(st->getBc()>= minBc && st->getBc() <= maxBc)
+          selStructures->push_back(st);
+      }
+
+      Random *rnd = new Random();
+      for(int i = 0; i < selStructures->size(); i++){
+        Structure *st = (*selStructures)[i];
+        ErChmm *erChmm = new ErChmm();
+        erChmm->set(st, interarrivals->getMean(), rnd);
+        erChmmVec->push_back(erChmm);
+      }
+
+      printf("Number of generated structures : %d\n", (int)selStructures->size());
+      char structStr[256]="";
+      for(int i = 0; i < selStructures->size(); i++){
+        Structure *st = (*selStructures)[i];
+        st->str(structStr);
+        printf("  [ %d ] : %s\n", (i+1), structStr);
+      }
+      printf("\n");
+
+
+
+
+    }
+
+  }
+
+  // number of iterations
+  int iterationCount = acquire_int("Enter number of iterations", "100");
+  printf("  >> number of iterations : %d\n", iterationCount);
+  printf("\n");
+
+  // number of partitions
+  int partitionCount = acquire_int("Enter number of partitions", "7680");
+  printf("  >> number of iterations : %d\n", iterationCount);
+  printf("\n");
+
+
+  // the algorithm implementations
+  char implOptions[256]="ser,p3d";
+  printf("Enter EM algorithm implementations, available : \n");
+  printf("  ser - serial implementation\n");
+  printf("  p1 - parallel implementation with one pass\n");
+  printf("  p2, p2d - parallel implementation with two passes\n");
+  printf("  p3, p3d - parallel implementation with three passes\n");
+
+  vector<Option*> *moptions = new vector<Option*>();
+  moptions->push_back(new Option("ser", 0));
+  moptions->push_back(new Option("p1", 1));
+  moptions->push_back(new Option("p2", 2));
+  moptions->push_back(new Option("p2d", 3));
+  moptions->push_back(new Option("p3", 4));
+  moptions->push_back(new Option("p3d", 5));
+
+  vector<int>* implVec = acquire_options("Enter your choice", "ser, p3d", moptions);
+  delete moptions;
+
+  printf("  >> options : ");
+  char tmp[256]="";
+  for(int i = 0; i < implVec->size(); i++){
+    impl_str(tmp, (*implVec)[i] );
+    printf("%s", tmp);
+    if(i < implVec->size() - 1)
+    printf(", ");
+  }
+  printf("\n\n");
+
+
+
+  //
+  printf("\n/ Fitting has been started. / \n\n");
+
+  char infoFileName[64]="info.txt";
+  char llhFileName[64]="llh.txt";
+  char summaryFileName[64]="summary.txt";
+
+  char initialErChmmFolderName[256] = "initial-erchmm";
+  char resultErChmmFolderName[256] = "result-erchmm";
+
+  // creating folders
+  char syscmd[128]="";
+  sprintf(syscmd, "mkdir -p %s", initialErChmmFolderName);
+  int dir_err = system(syscmd);
+
+  sprintf(syscmd, "mkdir -p %s", resultErChmmFolderName);
+  dir_err = system(syscmd);
+
+
+  FILE *infoFile = fopen(infoFileName, "w");
+  fprintf(infoFile, "tag; L; R; impl; struct; llh; mean; runtime; cpu mem; gpu mem; total mem\n");
+
+
+  // char structStr[128] = "";
+  // int_arr_to_str(structStr, initialErChmm->getBc(), initialErChmm->getRi());
+  //
+  //
+  // fprintf(infoFile, "initial-erchmm; - ; %d; - ; %s; %e; %e; - ; - ; - ; -\n",
+  //   initialErChmm->getBc(),
+  //   structStr,
+  //   initialErChmm->obtainLogLikelihood(interarrivals),
+  //   initialErChmm->obtainMean());
+  // fprintf(infoFile, "sample; - ; - ; - ; - ; - ; %e; - ; - ; - ; - \n", interarrivals->getMean() );
+
+  fclose(infoFile);
+
+
+
+
+  vector<FittingOutput*> *fos = new vector<FittingOutput*>();
+
+  char path[128]="";
+  for(int i = 0; i < erChmmVec->size(); i++){
+    ErChmm *initialErChmm = (*erChmmVec)[i];
+    for(int impl_i = 0; impl_i < implVec->size(); impl_i++){
+      int impl = (*implVec)[impl_i];
+
+
+      Structure *st = new Structure(initialErChmm->getBc(), initialErChmm->getRi());
+      FittingOutput *fo = runFitting(impl, partitionCount, initialErChmm, st, interarrivals);
+
+
+      fos->push_back(fo);
+
+      fo->append_to_file(infoFileName);
+
+
+      sprintf(path, "%s%c%s.txt", initialErChmmFolderName, kPathSeparator, fo->tag());
+      fo->initialErChmm()->write_to_file(path);
+
+      sprintf(path, "%s%c%s.txt", resultErChmmFolderName, kPathSeparator, fo->tag());
+      fo->resultErChmm()->write_to_file(path);
+
+
+
+    }
+  }
+
+
+  std::sort(fos->begin(), fos->end(),
+  []( FittingOutput* lhs,  FittingOutput* rhs)
+  {
+      return lhs->getLlh() > rhs->getLlh();
+  });
+
+  FILE *file = fopen(llhFileName, "w");
+  fprintf(file, "tag; llh\n");
+  for(int i = 0; i < fos->size(); i++){
+    FittingOutput *fo = (*fos)[i];
+    fprintf(file, "%s; %.16e\n", fo->tag(), fo->getLlh());
+
+  }
+
+  fclose(file);
+
+
+  // summary
+  minBc = maxBc = (*fos)[0]->getBc();
+  for(int i = 1; i < fos->size(); i++){
+    int bc = (*fos)[i]->getBc();
+    if(bc < minBc) minBc = bc;
+    if(bc > maxBc) maxBc = bc;
+  }
+
+  int implCount = implVec->size();
+  int bcc = maxBc - minBc + 1;
+  int caseCount = implCount*bcc;
+
+
+
+  int *strCountArr = new int[caseCount];
+  double *rtArr = new double[caseCount];
+  double *gpuMemArr = new double[caseCount];
+  double *cpuMemArr = new double[caseCount];
+
+  for(int i = 0; i < caseCount; i++){
+    strCountArr[i] = 0;
+    rtArr[i] = 0;
+    gpuMemArr[i] = 0;
+    cpuMemArr[i] = 0;
+  }
+
+  for(int i = 0; i < fos->size(); i++){
+    FittingOutput *fo = (*fos)[i];
+    int bc_idx = fo->initialErChmm()->getBc() - minBc;
+    int impl_idx = -1;
+    for(int impl_i = 0; impl_i < implVec->size(); impl_i++){
+      if( (*implVec)[impl_i] == fo->getImpl())
+        impl_idx = impl_i;
+    }
+    int idx = impl_idx * bcc + bc_idx;
+
+    strCountArr[idx]++;
+    rtArr[idx] += fo->getRuntime();
+    gpuMemArr[idx] += fo->getGpuMem();
+    cpuMemArr[idx] += fo->getCpuMem();
+  }
+
+  for(int i = 0; i < caseCount; i++){
+    rtArr[i] /= (double)strCountArr[i];
+    gpuMemArr[i] /= (double)strCountArr[i];
+    cpuMemArr[i] /= (double)strCountArr[i];
+
+  }
+
+  file = fopen(summaryFileName, "w");
+
+    int L;
+    char implStr[6]="";
+    for(int impl_i = 0; impl_i < implVec->size(); impl_i++){
+      int impl = (*implVec)[impl_i];
+      if(impl == SERIAL)
+        L = 1;
+      else
+        L = partitionCount;
+
+      impl_str(implStr, impl);
+
+      fprintf(file, "L = %d, %s\n", L, implStr);
+      fprintf(file, "-----------------------------\n");
+      fprintf(file, "R; runtime (seconds); total mem; cpu mem; gpu mem\n");
+      for(int i = 0; i < bcc; i++){
+        int bc = i + minBc;
+        int idx = impl_i*bcc + i;
+        fprintf(file, "%d; %.3f; %.3f; %.3f; %.3f\n", bc, rtArr[idx], (cpuMemArr[idx]+gpuMemArr[idx]), cpuMemArr[idx], gpuMemArr[idx]);
+      }
+      fprintf(file, "\n");
+
+    }
+
+    fclose(file);
+
+
+
+
+  printf("\n/ Fitting is done. / \n\n");
+
+  printf("  Results written: \n");
+  printf("    %s%c - initial ER-CHMM parameters,\n", initialErChmmFolderName, kPathSeparator);
+  printf("    %s%c - result ER-CHMM parameters,\n", resultErChmmFolderName, kPathSeparator);
+  printf("    %s - all information about fitting,\n", infoFileName);
+  printf("    %s - summary of runtimes and memory usage,\n", summaryFileName);
+  printf("    %s - log-likelihood values, in descending order.\n", llhFileName);
+  printf("\n");
+
+
+
+
+
+}
+
+void cmd_cnv(){
+  printf("\n");
+  printf("/ Convert ER-CHMM parameters to MAP. / \n");
+  printf("\n");
+
+  // ER-CHMM parameter file
+  char erchmmFileName[256] = "";
+  acquire_file_name("Enter ER-CHMM file", "erchmm.txt", erchmmFileName);
+  printf("  >> file name \'%s\'\n", erchmmFileName);
+  printf("\n");
+
+  // MAP parameter file
+  char mapFileName[256] = "";
+  acquire_string("Enter MAP file", "map.txt", mapFileName);
+  printf("  >> file name \'%s\'\n", mapFileName);
+  printf("\n");
+
+  //
+  ErChmm *erChmm = new ErChmm();
+  erChmm->read_from_file(erchmmFileName);
+
+  Map *map = new Map();
+
+  map->set(erChmm);
+
+  map->write_to_file(mapFileName);
+
+  printf("The MAP parameters have been written to \'%s\'.\n\n", mapFileName);
+
+  delete erChmm;
+  delete map;
+
+}
+
+void cmd_res(){
+
+  printf("\n");
+  printf("/ Research computations for paper. / \n");
+  printf("\n");
+  printf("  ! The research can be interrupted (by closing application). The next time it will be launched it will resume the computations.\n\n");
+
+  Research *research = new Research();
+  research->run();
+  delete research;
+
+}
+
+
 int main(int argc, char *argv[]){
 
   printf("Parallel algorithms for fitting Markov Arrival Processes, 2016-2018\n");
@@ -2687,6 +2876,7 @@ int main(int argc, char *argv[]){
     printf("  sim - simulate ER-CHMM process\n");
     printf("  llh - compute log-likelihood\n");
     printf("  fit - perform fitting\n");
+    printf("  cnv - convert ER-CHMM parameters to MAP\n");
     printf("  res - perform paper research\n");
     printf("  q   - quit\n");
     printf("Select your option : ");
@@ -2701,58 +2891,12 @@ int main(int argc, char *argv[]){
       cmd_llh();
     else if(strcmp(input, "fit") == 0)
       cmd_fit();
+    else if(strcmp(input, "cnv") == 0)
+      cmd_cnv();
     else if(strcmp(input, "res") == 0)
       cmd_res();
 
   }while(strcmp(input, "q") != 0);
-
-
-
-
-  // Research *research = new Research();
-  // research->run();
-  // delete research;
-
-  // Research2 *research = new Research2();
-  // research->run();
-  // delete research;
-
-
-  // int bc = 2;
-  // int *ri = new int[bc];
-  // double *lambda = new double[bc];
-  // double *P = new double[bc*bc];
-  // ri[0] = 1;
-  // ri[1] = 2;
-  //
-  // lambda[0] = 1.5;
-  // lambda[1] = 2.5;
-  //
-  // P[0*bc+0] = 0.2;
-  // P[0*bc+1] = 0.8;
-  // P[1*bc+0] = 0.7;
-  // P[1*bc+1] = 0.3;
-  //
-  // ErChmm *erChmm = new ErChmm();
-  // erChmm->set(bc, ri, lambda, P);
-
-  // Interarrivals *interarrivals = new Interarrivals();
-  // interarrivals->generate(erChmm, 20);
-  // interarrivals->print_out();
-  // interarrivals->write_to_file("sample-data.bin");
-  //
-  // Interarrivals *interarrivals2 = new Interarrivals();
-  // interarrivals2->read_from_file("sample-data.bin");
-  // interarrivals2->print_out();
-
-  //
-  // erChmm->print_out();
-  // erChmm->write_to_file("params.erchmm");
-  //
-  // ErChmm *erChmm2 = new ErChmm();
-  // erChmm2->read_from_file("params.erchmm");
-  // erChmm2->print_out();
-
 
   return 0;
 
