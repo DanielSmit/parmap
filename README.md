@@ -139,7 +139,7 @@ Enter number of iterations ( 100 ) :
   >> number of iterations : 100
 
 Enter number of partitions ( 7680 ) : 
-  >> number of iterations : 100
+  >> number of partitions : 7680
 
 Enter EM algorithm implementations, available : 
   ser - serial implementation
