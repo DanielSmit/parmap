@@ -10,7 +10,7 @@ $ make
 $ ./prog
 ```
 
-Upon star, the program performs some tests to check code. Your these tests if you are modifying the source code. 
+Upon start, the program performs some tests to check the code. Your these tests if you are modifying the source code. 
 
 ```
 / Testing code ... 
