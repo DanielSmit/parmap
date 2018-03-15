@@ -2286,7 +2286,7 @@ vector<int>* acquire_options(const char *promptStr, const char *defaultStr, vect
       int id = -1;
       for(int i = 0; i < options->size(); i++){
         char* opt = (*options)[i]->opt;
-        if(strcmp(opt, str) == 0){
+        if(strcmp(opt, token) == 0){
           id = (*options)[i]->id;
           break;
         }
@@ -2299,6 +2299,7 @@ vector<int>* acquire_options(const char *promptStr, const char *defaultStr, vect
       }
 
       output->push_back(id);
+
       token = strtok(NULL, ",; ");
     }
 
@@ -2348,7 +2349,7 @@ void cmd_gen(){
 
   erChmm->write_to_file(erchmmFileName);
 
-  printf("The generated ER-CHMM parameters are written to \'%s\' for .. \n", erchmmFileName);
+  printf("The generated ER-CHMM parameters are written to \'%s\'.\n", erchmmFileName);
   printf("\n");
 
   delete rnd;
@@ -2392,7 +2393,7 @@ void cmd_sim(){
   interarrivals->generate(erChmm, count);
   interarrivals->write_to_file(outputFileName);
 
-  printf("  The generated interarrivals (mean : %f) are written to \'%s\' for .. \n", interarrivals->getMean(), outputFileName);
+  printf("  The generated interarrivals (mean : %f) are written to \'%s\'.\n", interarrivals->getMean(), outputFileName);
   printf("\n");
 
   delete  interarrivals;
@@ -2583,7 +2584,7 @@ void cmd_fit(){
 
   // number of partitions
   int partitionCount = acquire_int("Enter number of partitions", "7680");
-  printf("  >> number of iterations : %d\n", iterationCount);
+  printf("  >> number of partitions : %d\n", partitionCount);
   printf("\n");
 
 
