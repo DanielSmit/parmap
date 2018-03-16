@@ -976,7 +976,7 @@ void Interarrivals::read_from_file(const char *fileName){
   r = fread(&count, sizeof(int), 1, file);
 
   float *arr = new float[count];
-  r = fread(arr, sizeof(double), count, file);
+  r = fread(arr, sizeof(float), count, file);
 
   fclose(file);
 
