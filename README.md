@@ -147,7 +147,7 @@ Enter EM algorithm implementations, available :
   p2, p2d - parallel implementation with two passes
   p3, p3d - parallel implementation with three passes
 Enter your choice ( ser, p3d ) : ser, p2, p3d      
-  >> options : ser, ser, ser
+  >> options : ser, p2, p3d
 
 
 / Fitting has been started. / 
