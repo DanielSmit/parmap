@@ -1236,7 +1236,7 @@ void Research::run(){
   // double endTime; // = clock();
   // double runtime; // = (double)(endTime-startTime)/CLOCKS_PER_SEC;
 
-
+  int iterationCount = 100;
   int dir_err = 0;
 
   char str[256]="";
@@ -1405,7 +1405,7 @@ void Research::run(){
         printf("\n( step : %d / %d )\n\n", curr_step, fittingCount);
 
         ErChmm *initialErChmm = NULL;
-        FittingOutput *fo = runFitting(impl, L, initialErChmm, st, interarrivals);
+        FittingOutput *fo = runFitting(iterationCount, impl, L, initialErChmm, st, interarrivals);
 
         printf("Adding fitting results to '%s' ...", infoPath);
         fo->append_to_file(infoPath);
@@ -1709,8 +1709,8 @@ void Research2::run(){
     for(int impl = 0; impl <= 5; impl++){
 
       if(l != 0 && impl == 0 ) continue;
-
-      FittingOutput *fo = runFitting(impl, L, initialErChmm, st, interarrivals);
+      int iterCount = 100;
+      FittingOutput *fo = runFitting(iterCount, impl, L, initialErChmm, st, interarrivals);
       fos->push_back(fo);
 
       fo->append_to_file(mInfoFile);
@@ -1744,12 +1744,12 @@ void Research2::run(){
 
 }
 
-FittingOutput* runFitting(int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals){
-  if(impl == SERIAL) return runSerFitting(erChmm, st, interarrivals);
-  return runParFitting(impl, L, erChmm, st, interarrivals);
+FittingOutput* runFitting(int iterationCount, int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals){
+  if(impl == SERIAL) return runSerFitting(iterationCount, erChmm, st, interarrivals);
+  return runParFitting(iterationCount, impl, L, erChmm, st, interarrivals);
 }
 
-FittingOutput* runSerFitting(ErChmm *erChmm, Structure *st, Interarrivals *interarrivals){
+FittingOutput* runSerFitting(int iterationCount, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals){
 
   char tag[128]="";
   build_tag(tag, 0, st->getBc(), st->getRi(), 1);
@@ -1843,7 +1843,7 @@ FittingOutput* runSerFitting(ErChmm *erChmm, Structure *st, Interarrivals *inter
   fo->setMem(em->getCpuMemoryUsage(), em->getGpuMemoryUsage());
   fo->setRuntime(runtime);
   fo->setL(1);
-  fo->setIterCount(100);
+  fo->setIterCount(iterationCount);
 
   printf("... done.\n");
 
@@ -1862,7 +1862,7 @@ FittingOutput* runSerFitting(ErChmm *erChmm, Structure *st, Interarrivals *inter
 
 }
 
-FittingOutput* runParFitting(int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals){
+FittingOutput* runParFitting(int iterationCount, int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals){
   char tag[128]="";
   build_tag(tag, impl, st->getBc(), st->getRi(), L);
 
@@ -1956,7 +1956,7 @@ FittingOutput* runParFitting(int impl, int L, ErChmm *erChmm, Structure *st, Int
   fo->setMem(em->getCpuMemoryUsage(), em->getGpuMemoryUsage());
   fo->setRuntime(runtime);
   fo->setL(L);
-  fo->setIterCount(100);
+  fo->setIterCount(iterationCount);
 
   printf("... done.\n");
 
@@ -2668,7 +2668,7 @@ void cmd_fit(){
 
 
       Structure *st = new Structure(initialErChmm->getBc(), initialErChmm->getRi());
-      FittingOutput *fo = runFitting(impl, partitionCount, initialErChmm, st, interarrivals);
+      FittingOutput *fo = runFitting(iterationCount, impl, partitionCount, initialErChmm, st, interarrivals);
 
 
       fos->push_back(fo);

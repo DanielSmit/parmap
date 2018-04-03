@@ -310,10 +310,10 @@ class Research2 {
 
 };
 
-FittingOutput* runFitting(int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals);
+FittingOutput* runFitting(int iterationCount, int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals);
 
-FittingOutput* runSerFitting(ErChmm *erChmm, Structure *st, Interarrivals *interarrivals);
-FittingOutput* runParFitting(int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals);
+FittingOutput* runSerFitting(int iterationCount, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals);
+FittingOutput* runParFitting(int iterationCount, int impl, int L, ErChmm *erChmm, Structure *st, Interarrivals *interarrivals);
 
 
 #endif /* PROG_HEADER */
