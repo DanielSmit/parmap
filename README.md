@@ -5,6 +5,8 @@ We (Mindaugas Bražėnas, Gábor Horváth, Mikós Telek) have developed three pa
 
 To build the program and and launch it, execute 
 ```
+$ mkdir build
+$ cd build
 $ cmake ..
 $ make
 $ ./prog
@@ -275,3 +277,4 @@ Reading meta file 'research/.meta' ...... done.
 
 All the research results are written to 'research/' folder. All the research computations, depending on hardware, can take a long time to complete, therefore we have implemented interruption handling. The computations can be stoped (forcefully) at any time and will be resume upon next launch.
 
+mindaugas.brazenas at yahoo.com
